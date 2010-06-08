@@ -41,6 +41,9 @@ import http.client
 ### Pay attention to If-Modified-Since
 
 
+FLUSHED = "Flushed"
+
+
 class Handler:
     """Holds all the information necessary to handle a single resource dispatch.    
     """
@@ -69,10 +72,25 @@ class Handler:
         self.urlargs = urlargs
         self.content = "Single"
         self.nocache = False
-        self.status = None
+        self.__status = None
         self.headers = {}
         self.lines = []
-        self["Server"] = req.version
+    
+    @property
+    def status(self):
+        return self.__status
+    
+    @status.setter
+    def status(self, value):
+        self.__status = value
+
+    @property
+    def startstamp(self):
+        return self.req.server.stamp
+    
+    @property
+    def startstamprfc850(self):
+        return self.req.server.stamprcf850
     
     @property
     def datadir(self):
@@ -86,7 +104,37 @@ class Handler:
     def binaryname(self):
         return self.config.get("pyzombie_filesystem", "binary")
     
+    def serverurl(self, path):
+        """Given a path to a resource create a full URL to that resource.
+        
+        Parameters
+        ----------
+        path
+            The relative path on the server to the resource.
+        
+        Return
+        ------
+        The URL that can be given to this server to find the given resource.
+        """
+        return "http://{0}:{1}/{2}".format(
+                self.req.server.server_name,
+                self.req.server.server_port,
+                path)
+    
     def binarypaths(self, name):
+        """Given a name for a binary file create the path to the directory to
+        hold the binary, and a path to the binary itself.
+        
+        Parameters
+        ----------
+        name
+            Name of the binary.
+        
+        Return
+        ------
+        A tuple that gives the path to the containing directory, and the path
+        to the binary.
+        """
         edir = os.path.normpath(os.path.join(self.datadir, name))
         bin = os.path.normpath(os.path.join(edir, self.binaryname))
         return (edir, bin)
@@ -134,9 +182,6 @@ class Handler:
                     weight.insert(i - 1, w)
                     break
         return aset[:-1]
-
-    def setstatus(self, status):
-        self.status = status
     
     def readline(self):
         """Read a single line from the input stream in decoded format."""
@@ -195,23 +240,16 @@ class Handler:
             self.req.send_header("Content-Length", len(data))
             self.req.end_headers()
             self.req.wfile.write(data)
-            self.content = "Flushed"
+            self.content = FLUSHED
         else:
-            self.error(http.client.NOT_FOUND)
-    
-    def error(self, error, message=None):
-        self.req.send_error(error)
-        self.req.send_header("Server", self.req.version)
-        if message is not None:
-            pass
-        self.content = "Flushed"
-        
+            self.req.send_error(http.client.NOT_FOUND)
+            
         
     def flush(self):
         """Flush the headers if they have not been written and all the lines
         that have been written to the http output stream."""
         
-        if self.content == "Flushed":
+        if self.content == FLUSHED:
             return
 
         self.lines.append("")
@@ -232,12 +270,12 @@ class Handler:
                 
         if self.content == "Headers":
             self.req.end_headers()
-            self.content = "Flushed"
+            self.content = FLUSHED
         elif self.content == "Single":
             self.req.send_header("Content-Length", len(buf))
             self.req.end_headers()
             self.req.wfile.write(buf)
-            self.content = "Flushed"
+            self.content = FLUSHED
         elif self.content == "Chunked":
             pass
     

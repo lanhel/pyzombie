@@ -43,7 +43,7 @@ class test(Command):
     def initialize_options(self):
         self.suite = []
         test.test_dir = os.path.expanduser(test.test_dir)
-        sys.path.insert(0, os.path.abspath(test.test_dir))
+        sys.path[0] = os.path.abspath(test.test_dir)
         logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.NOTSET)
     
     def finalize_options(self):

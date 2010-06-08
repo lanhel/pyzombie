@@ -76,9 +76,9 @@ class HandlerHelp(Handler):
             files = [INDEX_ROW.format(f[0]) for f in files if f[1] == '.html']
             body = os.linesep.join(files)
             html = INDEX_HTML.format(body)
-            self.setstatus(http.client.OK)
+            self.status = http.client.OK
             self["Cache-Control"] = "public"
-            self["Last-Modified"] = self.req.server.stamprfc850
+            self["Last-Modified"] = self.startstamprfc850
             self["Content-type"] = "text/html;UTF-8"
             self.writelines(html)
         elif os.path.splitext(self.urlargs["helpfile"])[1] == '':

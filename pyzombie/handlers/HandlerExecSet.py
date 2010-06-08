@@ -75,7 +75,7 @@ class HandlerExecSet(Handler):
         body = os.linesep.join(dirs)
         html = INDEX_HTML.format(body)
         
-        self.setstatus(http.client.OK)
+        self.status = http.client.OK
         self["Cache-Control"] = "public max-age=3600"
         self["Last-Modified"] = mtime.strftime("%a, %d %b %Y %H:%M:%S GMT")
         self["Content-type"] = "text/html;UTF-8"
@@ -88,10 +88,7 @@ class HandlerExecSet(Handler):
         os.mkdir(edir)
         self.savebody(bin)
         self.nocache = True
-        self.setstatus(http.client.CREATED)
-        self["Location"] = "http://{0}:{1}/{2}".format(
-                self.req.server.server_name,
-                self.req.server.server_port,
-                name)
+        self.status = http.client.CREATED
+        self["Location"] = self.serverurl(name)
 
         

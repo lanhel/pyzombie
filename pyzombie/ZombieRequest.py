@@ -90,7 +90,7 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
     
     def __init__(self, request, client_address, server):
         self.protocol_version = "HTTP/1.1"
-        self.version = "pyzombie/" + __version__
+        self.server_version = "pyzombie/" + __version__
         self.config = server.config
         super().__init__(request, client_address, server)
     
@@ -102,7 +102,6 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
             if parts != None:
                 return (zd, parts)
         self.send_error(http.client.NOT_FOUND)
-        self.send_header("Server", self.version)
         self.end_headers()
         return (None, None)
     

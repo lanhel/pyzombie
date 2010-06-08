@@ -95,6 +95,7 @@ class ZombieServer(http.server.HTTPServer):
     def __init__(self, configfile, loglevel=logging.INFO):
         self.__init_config(configfile)
         self.__init_logging(loglevel)
+        self.__init_filesystem()
         
         ### Start the server
         address = self.config.get("pyzombie", "address")
@@ -143,12 +144,12 @@ class ZombieServer(http.server.HTTPServer):
         self.__init_makedir("spool")
     
     
-    def __init_makedir(confname):
+    def __init_makedir(self, confname):
         """Make a directory given a named value in the config [filesystem] section."""
         path = self.config.get("pyzombie_filesystem", confname)
         path = os.path.normpath(path)
-        print(path)
         if not os.path.isdir(path):
+            print("Create directory:", path)
             os.makedirs(path)
         ## TODO: check permissions
 
