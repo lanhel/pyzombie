@@ -27,26 +27,43 @@ import os
 import io
 import hashlib
 
-class HTTPResponse():
-    
+class HTTPResponse:
     def __init__(self, bytes):
-        self.strrep = str(bytes, "UTF-8")
-        tio = io.StringIO(self.strrep)
-        self.protocol, self.code, self.message = tio.readline().strip().split(" ", 2)
+        self.bio = io.BytesIO(bytes)
+        #self.strrep = str(bytes, "UTF-8")
+        #tio = io.StringIO(self.strrep)
+        
+        self.protocol, self.code, self.message = self.__readline().strip().split(" ", 2)
         self.header = {}
-        line = tio.readline().strip()
+        line = self.__readline().strip()
         while line != "":
             key, value = line.split(":", 1)
             self.header[key] = value.strip()
-            line = tio.readline().strip()
-        self.body = tio.read()
-    
+            line = self.__readline().strip()
+        self.body = self.bio.read()
+        
     @property
     def md5(self):
         m = hashlib.md5()
-        m.update(self.body.encode("UTF-8"))
+        m.update(self.body)
         return m.hexdigest()
     
+    def __readline(self):
+        ret = bytearray()
+        ch = self.bio.read(1)
+        while ch != b'' and ch not in [b"\n", b"\r"]:
+            ret.append(ord(ch))
+            ch = self.bio.read(1)
+        if ch == b"\r":
+            ch = self.bio.read(1)
+            if ch != b"\n":
+                self.bio.seek(-1, io.SEEK_CUR)
+        if ch != b'':
+            ret = ret + os.linesep.encode("UTF-8")
+        return str(ret, "UTF-8")
+            
+            
+
     def __str__(self):
         return self.strrep
 

@@ -26,15 +26,15 @@ __docformat__ = "reStructuredText en"
 import sys
 import unittest
 import io
-from pyzombie.handlers import HandlerLeftovers
+from pyzombie.handlers import HandlerHelp
 from MockRequest import MockRequest
 from HTTPResponse import HTTPResponse
 
 
-class HandlerLeftoversGetTest(unittest.TestCase):
+class HandlerHelpGetTest(unittest.TestCase):
     def runTest(self):
         req = MockRequest()
-        hndlr = HandlerLeftovers(req, {"leftover":"ExecAdd.html"})
+        hndlr = HandlerHelp(req, {"helpfile":"RESTful.html"})
         hndlr.get()
         resp = HTTPResponse(req.buffer.getvalue())
         
@@ -45,26 +45,10 @@ class HandlerLeftoversGetTest(unittest.TestCase):
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
 
-
-class HandlerLeftoversGetFaviconTest(unittest.TestCase):
+class HandlerHelpBadGetTest(unittest.TestCase):    
     def runTest(self):
         req = MockRequest()
-        hndlr = HandlerLeftovers(req, {"leftover":"Favicon.ico"})
-        hndlr.get()
-        resp = HTTPResponse(req.buffer.getvalue())
-        
-        self.assertEqual("HTTP/1.1", resp.protocol)
-        self.assertEqual("200", resp.code)
-        self.assertEqual("OK", resp.message)
-        self.assertEqual("image/x-icon", resp.header["Content-Type"])
-        self.assertEqual(resp.md5, resp.header["ETag"])
-        self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
-
-
-class HandlerLeftoversBadGetTest(unittest.TestCase):    
-    def runTest(self):
-        req = MockRequest()
-        hndlr = HandlerLeftovers(req, {"leftover":"SpamAndEggs.html"})
+        hndlr = HandlerHelp(req, {"helpfile":"SpamAndEggs.html"})
         hndlr.get()
         resp = HTTPResponse(req.buffer.getvalue())
         self.assertEqual("HTTP/1.1", resp.protocol)

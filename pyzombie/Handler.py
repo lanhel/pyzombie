@@ -251,6 +251,8 @@ class Handler:
         
         if self.content == FLUSHED:
             return
+        
+        trash = self.req.rfile.read()
 
         self.lines.append("")
         buf = os.linesep.join(self.lines).encode("UTF-8")
