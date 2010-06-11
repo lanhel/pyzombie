@@ -75,11 +75,13 @@ class HandlerExecSet(Handler):
         body = os.linesep.join(dirs)
         html = INDEX_HTML.format(body)
         
+        print("GET")
         self.status = http.client.OK
         self["Cache-Control"] = "public max-age=3600"
         self["Last-Modified"] = mtime.strftime("%a, %d %b %Y %H:%M:%S GMT")
-        self["Content-type"] = "text/html;UTF-8"
+        self["Content-Type"] = "text/html;UTF-8"
         self.writelines(html)
+        self.flush()
         
     def post(self):
         name = self.execbase
@@ -90,5 +92,6 @@ class HandlerExecSet(Handler):
         self.nocache = True
         self.status = http.client.CREATED
         self["Location"] = self.serverurl(name)
+        self.flush()
 
         

@@ -88,7 +88,8 @@ class HandlerHelp(Handler):
         else:
             file = os.path.join(HELPDIR, self.urlargs["helpfile"])
             file = os.path.normpath(file)
-            self.writefile(file)            
+            self.writefile(file)
+        self.flush()
 
 
 

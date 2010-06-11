@@ -25,6 +25,7 @@ __docformat__ = "reStructuredText en"
 import sys
 import os
 import io
+import time 
 import configparser
 import http.client
 import unittest
@@ -39,11 +40,10 @@ class MockRequest():
         self.error_content_type = "text/plain"
         self.error_message_format = """Code: %(code)d\nMessage: %(message)s\nExplain: %(explain)s"""
         self.config = self.server.config
-        self.buffer = io.BytesIO()
     
     def __writeline(self, line):
-        self.buffer.write(line.encode("UTF-8"))
-        self.buffer.write(os.linesep.encode("UTF-8"))
+        self.wfile.write(line.encode("UTF-8"))
+        self.wfile.write(os.linesep.encode("UTF-8"))
     
     def send_response(self, code, message=None):
         if message is None:
@@ -69,9 +69,29 @@ class MockRequest():
     def end_headers(self):
         self.__writeline("")
     
+    def date_time_string(timestamp=None):
+        if timestamp is None:
+            timestamp = time.time()
+        return time.strftime(timestamp, "%a, %d %b %Y %H:%M:%S GMT")
+    
+    @property
+    def headers(self):
+        if not hasattr(self, '_MockRequest__headers'):
+            self.__headers = {}
+        return self.__headers
+    
     @property
     def wfile(self):
-        return self.buffer
+        if not hasattr(self, 'writebuf'):
+            self.writebuf = io.BytesIO()
+        return self.writebuf
+    
+    @property
+    def rfile(self):
+        if not hasattr(self, 'readbuf'):
+            self.readbuf = io.BytesIO(b"")
+        return self.readbuf
+    
 
 
 

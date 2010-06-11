@@ -24,8 +24,10 @@ __docformat__ = "reStructuredText en"
 
 
 import sys
-import unittest
+import os
 import io
+import re
+import unittest
 from pyzombie.handlers import HandlerExecSet
 from MockRequest import MockRequest
 from HTTPResponse import HTTPResponse
@@ -36,8 +38,8 @@ class HandlerExecSetGetEmptyTest(unittest.TestCase):
         req = MockRequest()
         hndlr = HandlerExecSet(req, {})
         hndlr.get()
-        resp = HTTPResponse(req.buffer.getvalue())
-        
+
+        resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual("HTTP/1.1", resp.protocol)
         self.assertEqual("200", resp.code)
         self.assertEqual("OK", resp.message)
@@ -47,5 +49,30 @@ class HandlerExecSetGetEmptyTest(unittest.TestCase):
 
 
 class HandlerExecSetPostTest(unittest.TestCase):
+    LOC_RE = r"""http://MockServer:8008/(zombie_\d{7}T\d{6}Z)"""
+    
     def runTest(self):
-        pass
+        data = b"ExecSetPostTest"
+
+        req = MockRequest()
+        req.rfile.write(data)
+        req.rfile.seek(0)
+        req.headers["Content-Length"] = str(len(data))
+        hndlr = HandlerExecSet(req, {})
+        hndlr.post()
+        
+        resp = HTTPResponse(req.wfile.getvalue())        
+        self.assertEqual("HTTP/1.1", resp.protocol)
+        self.assertEqual("201", resp.code)
+        self.assertEqual("Created", resp.message)
+        self.assertRegexpMatches(resp.header["Location"], self.LOC_RE)
+        self.assertEqual(int(resp.header["Content-Length"]), 0)
+        
+        file = re.match(self.LOC_RE, resp.header["Location"]).group(1)
+        edir, bin = hndlr.binarypaths(file)
+        self.assertTrue(os.path.isdir(edir))
+        self.assertTrue(os.path.isfile(bin))
+        self.assertEquals(open(bin, 'rb').read(), data)
+
+
+

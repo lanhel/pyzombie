@@ -36,7 +36,7 @@ class HandlerHelpGetTest(unittest.TestCase):
         req = MockRequest()
         hndlr = HandlerHelp(req, {"helpfile":"RESTful.html"})
         hndlr.get()
-        resp = HTTPResponse(req.buffer.getvalue())
+        resp = HTTPResponse(req.wfile.getvalue())
         
         self.assertEqual("HTTP/1.1", resp.protocol)
         self.assertEqual("200", resp.code)
@@ -50,7 +50,7 @@ class HandlerHelpBadGetTest(unittest.TestCase):
         req = MockRequest()
         hndlr = HandlerHelp(req, {"helpfile":"SpamAndEggs.html"})
         hndlr.get()
-        resp = HTTPResponse(req.buffer.getvalue())
+        resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual("HTTP/1.1", resp.protocol)
         self.assertEqual("404", resp.code)
         self.assertEqual("Not Found", resp.message)

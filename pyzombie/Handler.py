@@ -90,7 +90,7 @@ class Handler:
     
     @property
     def startstamprfc850(self):
-        return self.req.server.stamprcf850
+        return self.req.date_time_string()
     
     @property
     def datadir(self):
@@ -227,7 +227,7 @@ class Handler:
             type, enc = mimetypes.guess_type(path, strict=True)
             self.req.send_response(http.client.OK)
             self.req.send_header("Cache-Control", "public max-age={0}".format(self.req.server.maxagestatic))
-            self.req.send_header("Last-Modified", self.req.server.stamprfc850)
+            self.req.send_header("Last-Modified", self.req.date_time_string)
             self.req.send_header("ETag", self.etag(data))
             if type == None:
                 self.req.send_header("Content-Type", "application/octet-stream")
@@ -243,6 +243,7 @@ class Handler:
             self.content = FLUSHED
         else:
             self.req.send_error(http.client.NOT_FOUND)
+            self.content = FLUSHED
             
         
     def flush(self):

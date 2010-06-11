@@ -120,7 +120,6 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
             zd = zd(self, parts)
             if hasattr(zd, method.lower()):
                 getattr(zd, method.lower())()
-                zd.flush()
             else:
                 self.send_response(http.client.METHOD_NOT_ALLOWED)
                 self.commonheaders()

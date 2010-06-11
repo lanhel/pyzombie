@@ -41,3 +41,11 @@ class MockServer():
         self.stampiso = self.stamp.isoformat()
         self.maxagedynamic = self.config.get("pyzombie", "maxage_dynamic")
         self.maxagestatic = self.config.get("pyzombie", "maxage_static")
+
+    @property
+    def server_name(self):
+        return "MockServer"
+    
+    @property
+    def server_port(self):
+        return 8008

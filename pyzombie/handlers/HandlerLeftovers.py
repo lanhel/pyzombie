@@ -56,6 +56,7 @@ class HandlerLeftovers(Handler):
         file = os.path.join(HTTPFILES, self.urlargs["leftover"])
         file = os.path.normpath(file)
         self.writefile(file)
+        self.flush()
             
 
         

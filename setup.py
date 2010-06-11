@@ -25,6 +25,7 @@ import sys
 if sys.version_info < (3, 0):
     raise Exception("pyzombie requires Python 3.0 or higher.")
 import os
+import shutil
 import logging
 import subprocess
 import re
@@ -38,16 +39,21 @@ class test(Command):
     user_options = [
         ("suite=", "s", "Run specific test suite [default: all tests]."),
     ]
-    test_dir = 'test'
+    test_src = 'test'
+    test_dst = 'build/test'
     
     def initialize_options(self):
         self.suite = []
-        test.test_dir = os.path.expanduser(test.test_dir)
-        sys.path[0] = os.path.abspath(test.test_dir)
+        test.test_src = os.path.expanduser(test.test_src)
+        test.test_dst = os.path.expanduser(test.test_dst)
+        sys.path[0] = os.path.abspath(test.test_dst)
         logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.NOTSET)
     
     def finalize_options(self):
-        for dirpath, dirnames, filenames in os.walk(test.test_dir):            
+        if os.path.isdir(test.test_dst):
+            shutil.rmtree(test.test_dst)
+        shutil.copytree(test.test_src, test.test_dst)
+        for dirpath, dirnames, filenames in os.walk(test.test_dst):            
             tests = [os.path.join(dirpath, f) for f in filenames
                     if f.endswith('Test.py') or f.endswith('TestCase.py')]
             tests = [os.path.abspath(f) for f in tests]

@@ -36,7 +36,7 @@ class HandlerLeftoversGetTest(unittest.TestCase):
         req = MockRequest()
         hndlr = HandlerLeftovers(req, {"leftover":"ExecAdd.html"})
         hndlr.get()
-        resp = HTTPResponse(req.buffer.getvalue())
+        resp = HTTPResponse(req.wfile.getvalue())
         
         self.assertEqual("HTTP/1.1", resp.protocol)
         self.assertEqual("200", resp.code)
@@ -51,7 +51,7 @@ class HandlerLeftoversGetFaviconTest(unittest.TestCase):
         req = MockRequest()
         hndlr = HandlerLeftovers(req, {"leftover":"Favicon.ico"})
         hndlr.get()
-        resp = HTTPResponse(req.buffer.getvalue())
+        resp = HTTPResponse(req.wfile.getvalue())
         
         self.assertEqual("HTTP/1.1", resp.protocol)
         self.assertEqual("200", resp.code)
@@ -66,7 +66,7 @@ class HandlerLeftoversBadGetTest(unittest.TestCase):
         req = MockRequest()
         hndlr = HandlerLeftovers(req, {"leftover":"SpamAndEggs.html"})
         hndlr.get()
-        resp = HTTPResponse(req.buffer.getvalue())
+        resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual("HTTP/1.1", resp.protocol)
         self.assertEqual("404", resp.code)
         self.assertEqual("Not Found", resp.message)

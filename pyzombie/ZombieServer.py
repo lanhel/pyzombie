@@ -103,9 +103,6 @@ class ZombieServer(http.server.HTTPServer):
         super().__init__((address, port), ZombieRequest)
 
         ### Setup various properties
-        self.stamp = datetime.utcnow()
-        self.stamprfc850 = self.stamp.strftime("%a, %d %b %Y %H:%M:%S GMT")
-        self.stampiso = self.stamp.isoformat()
         self.maxagedynamic = self.config.get("pyzombie", "maxage_dynamic")
         self.maxagestatic = self.config.get("pyzombie", "maxage_static")
     
