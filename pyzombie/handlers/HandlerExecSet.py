@@ -75,7 +75,6 @@ class HandlerExecSet(Handler):
         body = os.linesep.join(dirs)
         html = INDEX_HTML.format(body)
         
-        print("GET")
         self.status = http.client.OK
         self["Cache-Control"] = "public max-age=3600"
         self["Last-Modified"] = mtime.strftime("%a, %d %b %Y %H:%M:%S GMT")

@@ -29,6 +29,7 @@ import os
 from datetime import datetime
 from datetime import timedelta
 import logging
+import socket
 import http.client
 import http.server
 from .Handler import Handler
@@ -126,28 +127,46 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
         
     def do_OPTIONS(self):
-        zd, mo = self.resolvedispatch('OPTIONS')
-        if zd != None:
-            self.send_response(http.client.OK)
-            self.send_header("Server", "pyzombie/" + __version__)
-            self.send_header("Allow", zd.allow)
-            self.send_header("Location", zd.help)
-            self.end_headers()
+        try:
+            zd, mo = self.resolvedispatch('OPTIONS')
+            if zd != None:
+                self.send_response(http.client.OK)
+                self.send_header("Server", "pyzombie/" + __version__)
+                self.send_header("Allow", zd.allow)
+                self.send_header("Location", zd.help)
+                self.end_headers()
+        except socket.error as err:
+            self.log_error("Internal socket error %s.", err)
     
     def do_HEAD(self):
-        self.dispatch('HEAD')
+        try:
+            self.dispatch('HEAD')
+        except socket.error as err:
+            self.log_error("Internal socket error %s.", err)
 
     def do_GET(self):
-        self.dispatch('GET')
+        try:
+            self.dispatch('GET')
+        except socket.error as err:
+            self.log_error("Internal socket error %s.", err)
     
     def do_POST(self):
-        self.dispatch('POST')
+        try:
+            self.dispatch('POST')
+        except socket.error as err:
+            self.log_error("Internal socket error %s.", err)
     
     def do_PUT(self):
-        self.dispatch('PUT')
+        try:
+            self.dispatch('PUT')
+        except socket.error as err:
+            self.log_error("Internal socket error %s.", err)
     
     def do_DELETE(self):
-        self.dispatch('DELETE')
+        try:
+            self.dispatch('DELETE')
+        except socket.error as err:
+            self.log_error("Internal socket error %s.", err)
 
 
 
