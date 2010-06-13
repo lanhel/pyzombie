@@ -35,7 +35,7 @@ from distutils.core import Command
 
 
 class test(Command):
-    description = "Run all unit tests and integration tests on the system."
+    description = "Run all unit and integration tests on the system."
     user_options = [
         ("suite=", "s", "Run specific test suite [default: all tests]."),
     ]
