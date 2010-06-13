@@ -57,6 +57,7 @@ class HandlerExecSetPostTest(unittest.TestCase):
         req = MockRequest()
         req.rfile.write(data)
         req.rfile.seek(0)
+        req.headers["Content-Type"] = "text/plain"
         req.headers["Content-Length"] = str(len(data))
         hndlr = HandlerExecSet(req, {})
         hndlr.post()

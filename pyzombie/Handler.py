@@ -26,10 +26,17 @@ __all__ = ['Handler']
 
 import sys
 import os
+from datetime import datetime
 import mimetypes
 import hashlib
 import re
+import cgi
+import cgitb
 import http.client
+
+
+#cgitb.enable()
+
 
 ###
 ### TODO
@@ -94,7 +101,13 @@ class Handler:
     
     @property
     def datadir(self):
-        return self.config.get("pyzombie_filesystem", "data")
+        ret = self.config.get("pyzombie_filesystem", "data")
+        if ret.startswith('.'):
+            ret = os.path.join(os.getcwd(), ret)
+        ret = os.path.normpath(ret)
+        if not os.path.isdir(ret):
+            os.makedirs(ret)
+        return ret
     
     @property
     def execbase(self):
@@ -183,23 +196,49 @@ class Handler:
                     break
         return aset[:-1]
     
+    def rfile_safe(self):
+        return HttpServerFP(self.req)
+    
+    def multipart(self):
+        ctype, pdict = cgi.parse_header(self.req.headers['Content-Type'])
+        if ctype != 'multipart/form-data':
+            self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
+            return None
+        fs = cgi.FieldStorage(fp=self.rfile_safe(), headers=self.req.headers,
+            environ={'REQUEST_METHOD':'POST'})
+        return fs
+    
     def readline(self):
         """Read a single line from the input stream in decoded format."""
         pass
-    
-    def savebody(self, path):
-        """Save the body of the request to the given file."""
-        out = open(path, "wb")
-        length = int(self.req.headers["Content-Length"])
-        while length >= 4096:
-            bdata = self.req.rfile.read(4096)
-            out.write(bdata)
-            length = length - 4096
-        bdata = self.req.rfile.read(length)
-        out.write(bdata)
+
+    def save_executable(self, fp):
+        """Save the executable in the file pointer to the configured data directory.
+        
+        Parameters
+        ----------
+        fp
+            The file type object that contains the contents for the executable.
+            This must return an EOF when end of stream is reached: do not use
+            the self.req.rfile for this parameter instead use self.rfile_safe().
+        
+        Return
+        ------
+        The name of the newly created executable file name.
+        """
+        name = self.execbase
+        name = "{0}_{1}".format(name, datetime.utcnow().strftime("%Y%jT%H%M%SZ"))
+        edir, bin = self.binarypaths(name)
+        os.mkdir(edir)
+        out = open(bin, "w")
+        data = fp.read(4096)
+        while data:
+            out.write(data)
+            data = fp.read(4096)
         out.flush()
         out.close()
-    
+        return name
+        
     def writeline(self, line):
         """Write a single line of text to the output stream."""
         self.lines.append(line)
@@ -242,9 +281,11 @@ class Handler:
             self.req.wfile.write(data)
             self.content = FLUSHED
         else:
-            self.req.send_error(http.client.NOT_FOUND)
-            self.content = FLUSHED
-            
+            self.error(http.client.NOT_FOUND)
+    
+    def error(self, code, message=None):
+        self.req.send_error(code, message=message)
+        self.content = FLUSHED
         
     def flush(self):
         """Flush the headers if they have not been written and all the lines
@@ -293,4 +334,26 @@ class Handler:
     def __setitem__(self, key, value):
         self.headers[key] = value
     
+    
 
+class HttpServerFP():
+    """This will wrap the http.server request rfile so an EOF will be returned
+    when reading from the rfile. That way the Content-Length is always handled
+    correctly. This will also convert the binary stream into a character stream.
+    """
+    def __init__(self, req):
+        self.req = req
+        self.clen = int(self.req.headers['Content-Length'])
+        self.rfile = self.req.rfile
+    
+    def read(self, size=-1):
+        if size < 0:
+            size = self.clen
+        if size > self.clen:
+            size = self.clen
+        ret = ''
+        if size > 0:
+            ret = self.rfile.read(size)
+            self.clen = self.clen - len(ret)
+            ret = str(ret, 'UTF-8')
+        return ret

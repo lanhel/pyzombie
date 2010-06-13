@@ -26,7 +26,9 @@ __docformat__ = "reStructuredText en"
 __all__ = ['HandlerExecAdd']
 
 import sys
+import io
 import logging
+import http.client
 from .HandlerLeftovers import HandlerLeftovers
 
 class HandlerExecAdd(HandlerLeftovers):
@@ -34,9 +36,25 @@ class HandlerExecAdd(HandlerLeftovers):
     
     @classmethod
     def dispatch(cls):
-        cls.initdispatch(r"""^/add$""", "GET,OPTIONS,TRACE", "/help/RESTful")
+        cls.initdispatch(r"""^/add$""", "GET,POST, OPTIONS,TRACE", "/help/RESTful")
         return cls
+    
     
     def __init__(self, req, urlargs):
         super().__init__(req, {"leftover":"ExecAdd.html"})
+
+        
+    def post(self):
+        fs = self.multipart()
+        if fs:
+            datafp = fs['execfile'].file
+            name = self.save_executable(datafp)
+            self.nocache = True
+            self.status = http.client.CREATED
+            self["Location"] = self.serverurl(name)
+            self.flush()
+        else:
+            self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
+        
+
 

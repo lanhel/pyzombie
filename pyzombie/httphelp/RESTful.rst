@@ -70,6 +70,17 @@ URL
                 * ``text/html``
                 * ``application/xhtml+xml``
 
+        
+    POST
+        Add a new executable to the set of available executables.
+        
+        **Request**
+            ``Content-Type``
+                * ``multipart/form-data`` for executables uploaded from a form.
+        
+        **Response**
+            ``Location``: executable information page
+
 
 \http://myserver:8008/myexec
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

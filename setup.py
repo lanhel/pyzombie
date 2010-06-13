@@ -39,8 +39,9 @@ class test(Command):
     user_options = [
         ("suite=", "s", "Run specific test suite [default: all tests]."),
     ]
-    test_src = 'test'
+    test_src = 'test/pyzombie'
     test_dst = 'build/test'
+    test_var = 'build/var'
     
     def initialize_options(self):
         self.suite = []
@@ -67,8 +68,12 @@ class test(Command):
         self.suite = unittest.TestLoader().loadTestsFromNames(self.suite)        
     
     def run(self):
+        var = os.path.abspath(self.test_var)
+        if os.path.isdir(var):
+            shutil.rmtree(var)
         tr = unittest.TextTestRunner()
         tr.run(self.suite)
+
 
 class document(Command):
     """rst2html.py pyzombie/docs/RESTful.rst build/docs/RESTful.html"""

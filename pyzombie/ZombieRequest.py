@@ -122,8 +122,8 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
             if hasattr(zd, method.lower()):
                 getattr(zd, method.lower())()
             else:
-                self.send_response(http.client.METHOD_NOT_ALLOWED)
-                self.commonheaders()
+                self.send_error(http.client.METHOD_NOT_ALLOWED,
+                    "{0} not allowed on resource {1}".format(self.command, self.path))
                 self.end_headers()
         
     def do_OPTIONS(self):

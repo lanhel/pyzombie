@@ -128,10 +128,10 @@ class ZombieServer(http.server.HTTPServer):
         try:
             logging.config.fileConfig(self.configfile)
         except configparser.NoSectionError:
-            print("Using default logging configuration.")
             logging.config.fileConfig(io.StringIO(CONFIG_INIT))
             logging.getLogger("zombie").setLevel(loglevel)
-        logging.getLogger().info("Hello World")
+            logging.getLogger().info("Using default logging configuration.")
+        logging.getLogger().info("Logging initialized.")
     
     
     def __init_filesystem(self):
@@ -146,7 +146,7 @@ class ZombieServer(http.server.HTTPServer):
         path = self.config.get("pyzombie_filesystem", confname)
         path = os.path.normpath(path)
         if not os.path.isdir(path):
-            print("Create directory:", path)
+            logging.getLogger().info("Create directory: {0}".format(path))
             os.makedirs(path)
         ## TODO: check permissions
 

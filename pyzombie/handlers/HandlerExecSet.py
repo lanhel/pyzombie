@@ -32,6 +32,7 @@ import re
 import string
 from datetime import datetime
 import logging
+import cgi
 import http.client
 import http.server
 from ..Handler import Handler
@@ -83,14 +84,13 @@ class HandlerExecSet(Handler):
         self.flush()
         
     def post(self):
-        name = self.execbase
-        name = "{0}_{1}".format(name, datetime.utcnow().strftime("%Y%jT%H%M%SZ"))
-        edir, bin = self.binarypaths(name)
-        os.mkdir(edir)
-        self.savebody(bin)
+        ctype, pdict = cgi.parse_header(self.req.headers['Content-Type'])
+        if ctype not in ["text/plain", "application/octet-stream"]:
+            self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
+        name = self.save_executable(self.rfile_safe())
         self.nocache = True
         self.status = http.client.CREATED
         self["Location"] = self.serverurl(name)
         self.flush()
 
-        
+
