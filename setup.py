@@ -32,21 +32,41 @@ import re
 import unittest
 from distutils.core import setup
 from distutils.core import Command
+from distutils.command.build import build as _build
 
+class build(_build):
+    """This will overload the normal build command to allow automatic build
+    of the documentation from reStructured files.
+    """
+    
+    def run(self):
+        super().run()
+        for dirpath, dirnames, filenames in os.walk("pyzombie"):
+            files = [os.path.splitext(f) for f in filenames]
+            files = [f[0] for f in files if f[1] == ".rst"]
+            for f in files:
+                src = os.path.join(dirpath, f + ".rst")                
+                dst = os.path.join(self.build_lib, dirpath, f + ".html")
+                
+                if (self.force
+                or not os.path.isfile(dst)
+                or os.path.getmtime(src) > os.path.getmtime(dst)):
+                    print("translating", src)
+                    args = ["rst2html.py", os.path.abspath(src), os.path.abspath(dst)]
+                    subprocess.call(args)
+    
+        
 
 class test(Command):
     description = "Run all unit and integration tests on the system."
     user_options = [
         ("suite=", "s", "Run specific test suite [default: all tests]."),
     ]
-    test_src = 'test/pyzombie'
-    test_dst = 'build/test'
-    test_var = 'build/var'
     
     def initialize_options(self):
         self.suite = []
-        test.test_src = os.path.expanduser(test.test_src)
-        test.test_dst = os.path.expanduser(test.test_dst)
+        test.test_src = os.path.abspath("./test")
+        test.test_dst = os.path.abspath("./build/test")
         sys.path[0] = os.path.abspath(test.test_dst)
         logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.NOTSET)
     
@@ -64,46 +84,39 @@ class test(Command):
             self.suite.extend(tests)
             for d in [d for d in dirnames if d.startswith('.')]:
                 dirnames.remove(d)
-            sys.path.extend([os.path.join(dirpath, d) for d in dirnames])    
+            sys.path.extend([os.path.join(dirpath, d) for d in dirnames])
         self.suite = unittest.TestLoader().loadTestsFromNames(self.suite)        
     
     def run(self):
-        var = os.path.abspath(self.test_var)
+        var = os.path.abspath('./build/var')
         if os.path.isdir(var):
             shutil.rmtree(var)
         tr = unittest.TextTestRunner()
         tr.run(self.suite)
 
 
-class document(Command):
-    """rst2html.py pyzombie/docs/RESTful.rst build/docs/RESTful.html"""
-    description = "Generate the documentation for pyzombie."
+class acceptance(Command):
+    description = "Run acceptance tests against a server."
     user_options = [
-        ("html", None, "Create the HTML documentation."),
-    ]
+            ("suite=", "s", "Run specific acceptance suite [default: all tests]."),
+            ("host=", "h", "Server host IP address to test [default: localhost]."),
+            ("port=", "p", "Server host IP Port to test [default: 8008].")
+        ]
+    test_src = './acceptance/pyzombie'
     
     def initialize_options(self):
-        self.html = False
+        self.suite = []
+        self.host = "localhost"
+        self.port = "8008"
+        self.src = os.path.abspath("./acceptance")
+        self.dst = os.path.abspath("./build/acceptance")
     
     def finalize_options(self):
-        self.srcdir = "pyzombie"
-        if self.html:
-            self.exc = "rst2html.py"
-            self.ext = ".html"
-            self.dst = "build/lib/pyzombie/httphelp"
-            if not os.path.exists(os.path.abspath(self.dst)):
-                os.makedirs(os.path.abspath(self.dst))
+        pass
     
     def run(self):
-        for dirpath, dirnames, filenames in os.walk(self.srcdir):
-            files = [os.path.splitext(f) for f in filenames]
-            files = [f[0] for f in files if f[1] == ".rst"]
-            files = [(os.path.join(dirpath, f) + ".rst", os.path.join(self.dst, f) + self.ext)
-                        for f in files]
-            for f in files:
-                print(self.exc, f[0], f[1])
-                
-                subprocess.call([self.exc, os.path.abspath(f[0]), os.path.abspath(f[1])])            
+        pass
+
 
 class changeversion(Command):
     description = "Change first __version__ string in all python files where the version is in xx.yy.zz form."
@@ -146,7 +159,8 @@ class changeversion(Command):
                     file.close()
                 elif match:
                     print("Invalid version {0} in {1}.".format(match.groups()[0], path), file=sys.stderr)
-        
+
+
 class deploy(Command):
     description = "Place the distribution archive onto the distribution server."
     user_options = []
@@ -192,8 +206,8 @@ setup(
     #data_files=[],
     requires=[],
     cmdclass={
+            "build":build,
             "test":test,
-            "document":document,
             "deploy":deploy,
             "changeversion":changeversion
         },
