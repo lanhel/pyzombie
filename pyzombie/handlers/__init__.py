@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from .HandlerHelp import *
 from .HandlerExecSet import *
 from .HandlerExecAdd import *
+from .HandlerExec import *
 from .HandlerLeftovers import *
 
 

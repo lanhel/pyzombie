@@ -33,6 +33,8 @@ import re
 import cgi
 import cgitb
 import http.client
+from .ZombieConfig import config, datadir
+from .Executable import Executable
 
 
 #cgitb.enable()
@@ -52,7 +54,13 @@ FLUSHED = "Flushed"
 
 
 class Handler:
-    """Holds all the information necessary to handle a single resource dispatch.    
+    """Holds all the information necessary to handle a single resource dispatch.
+    
+    Properties
+    ----------
+    executable
+        The Executable object for this handler. In rare cases no executable
+        can be determined so this will return None.
     """
         
     @classmethod
@@ -75,7 +83,6 @@ class Handler:
     
     def __init__(self, req, urlargs):
         self.req = req
-        self.config = req.config
         self.urlargs = urlargs
         self.content = "Single"
         self.nocache = False
@@ -98,25 +105,30 @@ class Handler:
     @property
     def startstamprfc850(self):
         return self.req.date_time_string()
-    
+        
     @property
     def datadir(self):
-        ret = self.config.get("pyzombie_filesystem", "data")
-        if ret.startswith('.'):
-            ret = os.path.join(os.getcwd(), ret)
-        ret = os.path.normpath(ret)
-        if not os.path.isdir(ret):
-            os.makedirs(ret)
-        return ret
-    
+        return datadir()
+
     @property
-    def execbase(self):
-        return self.config.get("pyzombie_filesystem", "execbase")
+    def executable(self, mediatype=None):
+        if not hasattr(self, "_Handler__executable"):
+            self.initexecutable()
+        return self.__executable
     
-    @property
-    def binaryname(self):
-        return self.config.get("pyzombie_filesystem", "binary")
-    
+    def initexecutable(self, mediatype=None):
+        """This will initialize the executable property with a given media
+        type. Generally using the executable property directly will give
+        correct results. This is really only used when POST of a new exectuable
+        occurs."""
+        if hasattr(self, "_Handler__executable"):
+            raise AttributeError("Executable property is already initialized.")
+        if 'execname' in self.urlargs:
+            name = self.urlargs['execname']
+        else:
+            name = Executable.createname()            
+        self.__executable = Executable(name, mediatype)        
+        
     def serverurl(self, path):
         """Given a path to a resource create a full URL to that resource.
         
@@ -133,25 +145,7 @@ class Handler:
                 self.req.server.server_name,
                 self.req.server.server_port,
                 path)
-    
-    def binarypaths(self, name):
-        """Given a name for a binary file create the path to the directory to
-        hold the binary, and a path to the binary itself.
-        
-        Parameters
-        ----------
-        name
-            Name of the binary.
-        
-        Return
-        ------
-        A tuple that gives the path to the containing directory, and the path
-        to the binary.
-        """
-        edir = os.path.normpath(os.path.join(self.datadir, name))
-        bin = os.path.normpath(os.path.join(edir, self.binaryname))
-        return (edir, bin)
-        
+            
     def accept(self):
         """Return an ordered set of media types that will be accepted."""
         if not hasattr(self, "acceptset"):
@@ -211,34 +205,7 @@ class Handler:
     def readline(self):
         """Read a single line from the input stream in decoded format."""
         pass
-
-    def save_executable(self, fp):
-        """Save the executable in the file pointer to the configured data directory.
-        
-        Parameters
-        ----------
-        fp
-            The file type object that contains the contents for the executable.
-            This must return an EOF when end of stream is reached: do not use
-            the self.req.rfile for this parameter instead use self.rfile_safe().
-        
-        Return
-        ------
-        The name of the newly created executable file name.
-        """
-        name = self.execbase
-        name = "{0}_{1}".format(name, datetime.utcnow().strftime("%Y%jT%H%M%SZ"))
-        edir, bin = self.binarypaths(name)
-        os.mkdir(edir)
-        out = open(bin, "w")
-        data = fp.read(4096)
-        while data:
-            out.write(data)
-            data = fp.read(4096)
-        out.flush()
-        out.close()
-        return name
-        
+                    
     def writeline(self, line):
         """Write a single line of text to the output stream."""
         self.lines.append(line)
@@ -263,7 +230,7 @@ class Handler:
         """
         if os.path.isfile(path):
             data = open(path, "rb").read()
-            type, enc = mimetypes.guess_type(path, strict=True)
+            type, enc = mimetypes.guess_type(path)
             self.req.send_response(http.client.OK)
             self.req.send_header("Cache-Control", "public max-age={0}".format(self.req.server.maxagestatic))
             self.req.send_header("Last-Modified", self.req.date_time_string)

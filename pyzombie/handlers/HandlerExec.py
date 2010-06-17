@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 #$Id: setup.py 902 2009-10-16 16:38:28Z lance $
 #-------------------------------------------------------------------------------
-"""pyzombie HTTP RESTful server handler giving a web form to add an
+"""pyzombie HTTP RESTful server handler returning the representation of an
 executable."""
 __author__ = ('Lance Finn Helsten',)
 __version__ = '0.0'
@@ -23,41 +23,55 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 __docformat__ = "reStructuredText en"
 
-__all__ = ['HandlerExecAdd']
+__all__ = ['HandlerExec']
+
 
 import sys
-import io
+import os
+import re
+import string
+from datetime import datetime
 import logging
+import cgi
 import mimetypes
 import http.client
-from .HandlerLeftovers import HandlerLeftovers
+import http.server
+from ..Handler import Handler
 
-class HandlerExecAdd(HandlerLeftovers):
-    """Handle the add executable resource."""
-    
+
+class HandlerExec(Handler):    
     @classmethod
     def dispatch(cls):
-        cls.initdispatch(r"""^/add$""", "GET,POST, OPTIONS,TRACE", "/help/RESTful")
+        cls.initdispatch(r"""^/(?P<execname>\w+)/?$""",
+                "GET,PUT,DELETE,OPTIONS,TRACE",
+                "/help/RESTful")
         return cls
+            
+    def head(self):
+        self.content = "Headers"
+        self.get()
     
-    
-    def __init__(self, req, urlargs):
-        super().__init__(req, {"leftover":"ExecAdd.html"})
-
+    def get(self):
+        self.writefile(self.executable.binpath)
         
-    def post(self):
-        fs = self.multipart()
-        if fs:
-            type, enc = mimetypes.guess_type(fs['execfile'].filename)
-            self.initexecutable(mediatype=type)
-            datafp = fs['execfile'].file
-            self.executable.writeimage(datafp)
-            self.nocache = True
-            self.status = http.client.CREATED
-            self["Location"] = self.serverurl(self.executable.name)
-            self.flush()
-        else:
+    def put(self):
+        ctype, pdict = cgi.parse_header(self.req.headers['Content-Type'])
+        if ctype != self.executable.mediatype:
             self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
         
 
+        print(self.req.headers)
+        print(edir)
+        print(bin)
+        """
+        name = self.save_executable(self.rfile_safe())
+        self.nocache = True
+        self.status = http.client.CREATED
+        self["Location"] = self.serverurl(name)
+        self.flush()
+        """
+
+    def delete(self):
+        print(self.req.headers)
+        
 

@@ -85,12 +85,10 @@ class HandlerExecSet(Handler):
         
     def post(self):
         ctype, pdict = cgi.parse_header(self.req.headers['Content-Type'])
-        if ctype not in ["text/plain", "application/octet-stream"]:
-            self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
-        name = self.save_executable(self.rfile_safe())
+        self.initexecutable(mediatype=ctype)
+        self.executable.writeimage(self.rfile_safe())
         self.nocache = True
         self.status = http.client.CREATED
-        self["Location"] = self.serverurl(name)
+        self["Location"] = self.serverurl(self.executable.name)
         self.flush()
-
 

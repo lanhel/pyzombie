@@ -37,74 +37,25 @@ import logging.config
 import http.client
 import http.server
 from .ZombieRequest import ZombieRequest
+from .ZombieConfig import config, CONFIG_INIT
 
 ###
-### Initial Configuration
 ###
-CONFIG_INIT = """
-[pyzombie]
-address:        localhost
-port:           8008
-maxage_dynamic: 3600
-maxage_static:  604800
-
-[pyzombie_filesystem]
-execbase:   zombie
-binary:     executable
-
-var=./build/var
-log:        %(var)s/log/pyzombie
-run:        %(var)s/run/pyzombie.pid
-data:       %(var)s/data/pyzombie
-cache:      %(var)s/cache/pyzombie
-spool:      %(var)s/spool/pyzombie
-
-[loggers]
-keys=root,zombie
-
-[handlers]
-keys=consoleHandler
-
-[formatters]
-keys=simpleFormatter
-
-[logger_root]
-level=DEBUG
-handlers=consoleHandler
-
-[logger_zombie]
-level=DEBUG
-handlers=consoleHandler
-qualname=zombie
-propagate=0
-
-[handler_consoleHandler]
-class=StreamHandler
-level=DEBUG
-formatter=simpleFormatter
-args=(sys.stdout,)
-
-[formatter_simpleFormatter]
-format=%(asctime)s %(levelname)s %(message)s
-datefmt=
-"""
-
-
-
+###
 class ZombieServer(http.server.HTTPServer):
     def __init__(self, configfile, loglevel=logging.INFO):
         self.__init_config(configfile)
-        self.__init_logging(loglevel)
+        self.__init_logging(configfile, loglevel)
         self.__init_filesystem()
         
         ### Start the server
-        address = self.config.get("pyzombie", "address")
-        port = int(self.config.get("pyzombie", "port"))
+        address = config.get("pyzombie", "address")
+        port = int(config.get("pyzombie", "port"))
         super().__init__((address, port), ZombieRequest)
 
         ### Setup various properties
-        self.maxagedynamic = self.config.get("pyzombie", "maxage_dynamic")
-        self.maxagestatic = self.config.get("pyzombie", "maxage_static")
+        self.maxagedynamic = config.get("pyzombie", "maxage_dynamic")
+        self.maxagestatic = config.get("pyzombie", "maxage_static")
     
     def start(self):
         try:
@@ -116,17 +67,13 @@ class ZombieServer(http.server.HTTPServer):
             self.shutdown()
     
     def __init_config(self, configfile):
-        self.configfile = configfile
-        self.config = configparser.SafeConfigParser()
-        self.config.readfp(io.StringIO(CONFIG_INIT))
-        if os.path.isfile(self.configfile):
+        if os.path.isfile(configfile):
             print("Configuration:", configfile)
-            self.config.read(configfile)
+            config.read(configfile)
     
-    
-    def __init_logging(self, loglevel):
+    def __init_logging(self, configfile, loglevel):
         try:
-            logging.config.fileConfig(self.configfile)
+            logging.config.fileConfig(configfile)
         except configparser.NoSectionError:
             logging.config.fileConfig(io.StringIO(CONFIG_INIT))
             logging.getLogger("zombie").setLevel(loglevel)
@@ -143,7 +90,7 @@ class ZombieServer(http.server.HTTPServer):
     
     def __init_makedir(self, confname):
         """Make a directory given a named value in the config [filesystem] section."""
-        path = self.config.get("pyzombie_filesystem", confname)
+        path = config.get("pyzombie_filesystem", confname)
         path = os.path.normpath(path)
         if not os.path.isdir(path):
             logging.getLogger().info("Create directory: {0}".format(path))

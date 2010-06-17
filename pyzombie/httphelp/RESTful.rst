@@ -52,8 +52,10 @@ URL
         
         **Request**
             ``Content-Type``
-                * ``text/plain`` for interpreted executables (should have '#!')
-                * ``application/octet-stream`` for compiled executables.
+                This should be a recognized internet media type that will
+                allow proper execution of the uploaded file. If this is not
+                given then ``application/octet-stream`` will be used and may
+                result in execution failre.
         
         **Response**
             ``Location``: executable URL
@@ -97,8 +99,17 @@ URL
 
         **Request**
             ``Content-Type``
-                * ``text/plain`` for interpreted executables (should have '#!')
-                * ``application/octet-stream`` for compiled executables.
+                This must be a recognized internet media type that is the
+                same as the original executable: i.e. changing file types
+                from Python to Perl is not allowed. If this is not given
+                then ``application/octet-stream`` will be used as a default.
+        
+        **Status**
+        
+        1. ``200 (OK)`` if no instances of the executable are active.
+        
+        2. ``202 (Accepted)`` if an instance of the executable is active.
+        
 
     DELETE
         Remove the named executable from the set of available executables, and

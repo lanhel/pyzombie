@@ -46,11 +46,7 @@ DISPATCH_TABLE = [
         HandlerHelp.dispatch(),
         HandlerExecSet.dispatch(),
         HandlerExecAdd.dispatch(),
-
-        Handler.initdispatch(
-            r"""^/(?P<execname>\w+)/?$""",
-            "GET,PUT,DELETE,OPTIONS,TRACE",
-            "/help/RESTful"),
+        HandlerExec.dispatch(),
         
         Handler.initdispatch(#"Start",
             r"""^/(?P<execname>\w+)/start$""",
@@ -92,7 +88,6 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
         self.protocol_version = "HTTP/1.1"
         self.server_version = "pyzombie/" + __version__
-        self.config = server.config
         super().__init__(request, client_address, server)
     
     def resolvedispatch(self):
