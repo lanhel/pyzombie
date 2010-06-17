@@ -70,10 +70,9 @@ class HandlerExecSetPostTest(unittest.TestCase):
         self.assertEqual(int(resp.header["Content-Length"]), 0)
         
         file = re.match(self.LOC_RE, resp.header["Location"]).group(1)
-        edir, bin = hndlr.binarypaths(file)
-        self.assertTrue(os.path.isdir(edir))
-        self.assertTrue(os.path.isfile(bin))
-        self.assertEquals(open(bin, 'rb').read(), data)
+        self.assertTrue(os.path.isdir(hndlr.executable.dirpath))
+        self.assertTrue(os.path.isfile(hndlr.executable.binpath))
+        self.assertEquals(open(hndlr.executable.binpath, 'rb').read(), data)
 
 
 
