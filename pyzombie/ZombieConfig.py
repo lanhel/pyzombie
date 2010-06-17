@@ -47,7 +47,7 @@ maxage_static:  604800
 
 [pyzombie_filesystem]
 execbase:   zombie
-binary:     executable
+binary:     image
 
 var=./build/var
 log:        %(var)s/log/pyzombie

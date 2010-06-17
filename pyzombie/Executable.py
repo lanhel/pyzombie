@@ -85,6 +85,7 @@ class Executable:
                 mediatype = "application/octet-stream"
             self.__bin = self.__bin + mimetypes.guess_extension(mediatype)
         self.__mediatype = mimetypes.guess_type(self.__bin)
+        self.instances = []
     
     @property
     def datadir(cls):
@@ -120,7 +121,13 @@ class Executable:
     
     def readimage(self, fp):
         """Read te image from the persistant store into the file object."""
-        pass
+        execfile = open(self.binpath, "r")
+        databuf = execfile.read(4096)
+        while databuf:
+            fp.write(databuf)
+            databuf = fp.read(4096)
+        fp.flush()
+        execfile.close()
     
     def writeimage(self, fp):
         """Write the image from the file object to the persistant store."""
@@ -137,4 +144,6 @@ class Executable:
         pass
         
     def isrunning(self, edir):
-        return False
+        return instances
+
+
