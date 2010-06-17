@@ -28,6 +28,7 @@ import sys
 import os
 from datetime import datetime
 import mimetypes
+import weakref
 from .ZombieConfig import config, datadir
 
 
@@ -46,10 +47,20 @@ class Executable:
     
     @classmethod
     def createname(cls):
+        """Create a unique RESTful name for a new executable."""
         name = config.get("pyzombie_filesystem", "execbase")
         name = "{0}_{1}".format(name, datetime.utcnow().strftime("%Y%jT%H%M%SZ"))
         return name
     
+    __cache = {}
+    
+    @classmethod
+    def getcached(cls, name, mediatype=None):
+        """Get a cached executable by name. This will create a new executable
+        if necessary."""
+        if name not in cls.__cache:
+            cls.__cache[name] = Executable(name, mediatype)
+        return cls.__cache[name]
     
     def __init__(self, name, mediatype=None):
         """

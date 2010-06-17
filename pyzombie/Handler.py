@@ -127,7 +127,7 @@ class Handler:
             name = self.urlargs['execname']
         else:
             name = Executable.createname()            
-        self.__executable = Executable(name, mediatype)        
+        self.__executable = Executable.getcached(name, mediatype)        
         
     def serverurl(self, path):
         """Given a path to a resource create a full URL to that resource.
