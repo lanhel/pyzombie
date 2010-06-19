@@ -35,8 +35,16 @@ from .ZombieConfig import config, datadir
 class Executable:
     """This represents a single executable within the system.
     
-    Factory Properties
-    ------------------
+    Properties
+    ----------
+    name
+        The name of this executable.
+    dirpath
+        The path to the specific data directory for this executable.
+    binpath
+        The path to the executable image for this executable.
+    mediatype
+        The internet media type of executable.
     datadir
         The data directory that holds executables persistent information.
     execbase
@@ -88,15 +96,15 @@ class Executable:
         self.instances = []
     
     @property
-    def datadir(cls):
+    def datadir(self):
         return datadir()
     
     @property
-    def execbase(cls):
+    def execbase(self):
         return config.get("pyzombie_filesystem", "execbase")
     
     @property
-    def binaryname(cls):
+    def binaryname(self):
         return config.get("pyzombie_filesystem", "binary")
 
     @property
@@ -138,11 +146,7 @@ class Executable:
             databuf = fp.read(4096)
         execfile.flush()
         execfile.close()
-    
-    def run(self):
-        """Increment the executable running count."""
-        pass
-        
+            
     def isrunning(self, edir):
         return instances
 

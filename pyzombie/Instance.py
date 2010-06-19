@@ -1,0 +1,272 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+#$Id: setup.py 902 2009-10-16 16:38:28Z lance $
+#-------------------------------------------------------------------------------
+"""Executable instance."""
+__author__ = ('Lance Finn Helsten',)
+__version__ = '0.0'
+__copyright__ = """Copyright (C) 2009 Lance Finn Helsten"""
+__license__ = """
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+__docformat__ = "reStructuredText en"
+
+__all__ = ['Instance']
+
+import sys
+import os
+import io
+import errno
+from datetime import datetime, timedelta
+import json
+import subprocess
+from .ZombieConfig import config, datadir
+
+
+class Instance:
+    """This represents a instance of an executable. When an instance is
+    created it will add itself to the list of loaded instances in the
+    owning Executable object.
+    
+    Properties
+    ----------
+    executable
+        The executable factory that created this instance.
+    name
+        The name of this execution instance.
+    environ
+        The environment that was used to start this instance.
+    arguments
+        The command line arguments used to start this instance.
+    datadir
+        The path to the instance data directory.
+    workdir
+        The path to the instance's initial working directory.
+    tmpdir
+        The path to the instance's temporary directory.
+    timeout
+        The ``datetime`` stamp when the instance shall be terminated. This will
+        update as the process adds data to the stdout and stderr streams.
+    remove
+        The ``datetime`` stamp after which the instance may be removed from
+        the list of instances in the executable. This is generally seven days
+        after the creation of the instance.
+    process
+        The subprocess object the instance is executing in, or ``None`` if
+        the instance has completed execution.
+    start
+        The ``datetime`` stamp when the instance was started.
+    end
+        The ``datetime`` stamp when the instance was terminated.
+    returncode
+        The numeric exit status of the instance, or ``None`` if the instance
+        is still running.
+    stdin
+        The file like object to feed data into the instance. If the instance
+        has completed execution this will be a closed file.
+    stdout_path
+        This is the path to the stored stdout file.
+    stdout
+        The file like object that contains the standard output. This is a
+        random access read only file.
+    stderr_path
+        This is the path to the stored stderr file.
+    stderr
+        The file like object that contains the standard error. This is a
+        random access read only file.
+    """
+    
+    
+    @classmethod
+    def createname(cls):
+        """Create a unique RESTful name for a new executing instance."""
+        name = config.get("pyzombie_filesystem", "instance")
+        name = "{0}_{1}".format(name, datetime.utcnow().strftime("%Y%jT%H%M%SZ"))
+        return name
+    
+    def __init__(self, executable, name, environ={}, arguments=[]):
+        """
+        Parameters
+        ----------
+        executable
+            The executable factory that creates this instance.
+        name
+            The name of this instance.
+        environ
+            The environment dictionary to use to start this instance. If
+            ``None`` then a minimal shell environment shall be used: the
+            environment of pyzombie server shall not be used implicitly. If
+            the named instance already exists then this is ignored.
+        arguments
+            The list of command line arguments for the instance. If the
+            named instance already exists then this is ignored.
+        """
+        self.__executable = executable
+        self.__name = name
+        self.__statepath = os.path.join(self.datadir, 'state.json')
+        self.__environ = environ
+        self.__arguments = arguments
+        self.__process = None
+        self.__timeout_delta = timedelta(seconds=5)
+        self.__stdout = None
+        self.__stderr = None
+        self.__load()
+        
+        if not os.path.isdir(self.datadir):
+            os.makedirs(self.datadir)
+            os.makedirs(self.workdir)
+            os.makedirs(self.tmpdir)
+            open(self.stdout_path, 'wt').close()
+            open(self.stderr_path, 'wt').close()
+        
+        if self.returncode is None and self.process is None:
+            #start the process
+            pass
+            self.__save()
+        
+        executable.instances.append(self)
+        
+    @property
+    def executable(self):
+        return self.__executable
+    
+    @property
+    def name(self):
+        return self.__name
+    
+    @property
+    def environ(self):
+        return self.__environ
+    
+    @property
+    def arguments(self):
+        return self.__arguments
+    
+    @property
+    def datadir(self):
+        return os.path.join(self.executable.dirpath, self.name)
+    
+    @property
+    def workdir(self):
+        return os.path.join(self.datadir, 'var')
+    
+    @property
+    def tmpdir(self):
+        return os.path.join(self.datadir, 'tmp')
+    
+    @property
+    def timeout(self):
+        outmtime = datetime.utcfromtimestamp(os.path.getmtime(self.stdout_path))
+        errmtime = datetime.utcfromtimestamp(os.path.getmtime(self.stderr_path))
+        if outmtime >= errmtime:
+            return outmtime + self.__timeout_delta
+        else:
+            return errmtime + self.__timeout_delta
+    
+    @property
+    def remove(self):
+        return self.__remove
+    
+    @property
+    def process(self):
+        return self.__process
+    
+    @property
+    def start(self):
+        return self.__start
+    
+    @property
+    def end(self):
+        return self.__end
+    
+    @property
+    def returncode(self):
+        return self.__returncode
+    
+    @property
+    def stdin(self):
+        if self.process:
+            return self.process.stdin
+        else:
+            ret = io.StringIO()
+            ret.close()
+            return ret
+    
+    @property
+    def stdout_path(self):
+        return os.path.join(self.datadir, 'stdout.txt')
+    
+    @property
+    def stdout(self):
+        if not self.__stdout and self.__stdout.closed:
+            self._stdout.open(self.stdout_path, mode='rt', encoding='UTF-8')
+        return self.__stdout
+    
+    @property
+    def stderr_path(self):
+        return os.path.join(self.datadir, 'stderr.txt')
+    
+    @property
+    def stderr(self):
+        if not self.__stderr and self.__stderr.closed:
+            self._stderr.open(self.stdout_path, mode='rt', encoding='UTF-8')
+        return self.__stderr
+
+    DATETIME_FMT = '%Y-%m-%dT%H:%M:%SZ'
+
+    def __save(self):
+        """This will save the state of this instance to the instance's data
+        directory."""
+        state = {}
+        state['version'] = __version__
+        state['name'] = self.name
+        state['datadir'] = self.datadir
+        state['workdir'] = self.workdir.replace(self.datadir, '${datadir}')
+        state['tmpdir'] = self.tmpdir.replace(self.datadir, '${datadir}')
+        state['stdout'] = self.stdout_path.replace(self.datadir, '${datadir}')
+        state['stderr'] = self.stderr_path.replace(self.datadir, '${datadir}')
+        state['environ'] = self.environ
+        state['arguments'] = self.arguments
+        state['remove'] = self.remove.strftime(self.DATETIME_FMT)
+        state['start'] = self.start.strftime(self.DATETIME_FMT)
+        if self.__end is not None:
+            state['end'] = self.end.strftime(self.DATETIME_FMT)
+        else:
+            state['end'] = datetime.utcnow().strftime(self.DATETIME_FMT)
+        if self.returncode is None:
+            state['returncode'] = errno.ECHILD
+        else:
+            state['returncode'] = self.returncode
+                
+        statefile = open(self.__statepath, 'wt')
+        json.dump(state, statefile, sort_keys=True, indent=4)
+        statefile.close()
+    
+    def __load(self):
+        """This will load the state of this instance from the instance's
+        data directory."""
+        if os.path.isfile(self.__statepath):
+            statefile = open(self.__statepath, 'rt')
+            state = json.load(statefile)
+            statefile.close()
+            
+            self.__remove = datetime.strptime(state['remove'], self.DATETIME_FMT)
+            self.__start = datetime.strptime(state['start'], self.DATETIME_FMT)
+            self.__end = datetime.strptime(state['end'], self.DATETIME_FMT)
+            self.__returncode = int(state['returncode'])
+        else:
+            self.__remove = datetime.utcnow() + timedelta(days=7)
+            self.__start = datetime.utcnow()
+            self.__end = None
+            self.__returncode = None

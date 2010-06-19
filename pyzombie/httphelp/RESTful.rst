@@ -253,7 +253,7 @@ JavaScript, Ruby, Python, and PHP.
     required:
         self:           //str   # URL to this representation
         executable:     //str   # URL to the executable representation
-        status:         //one
+        returncode:     //one
             # Integer is the exit code when instance has terminated
             # String is the ISO 8601 datetime when instance shall be forced to terminate
         remove:         //str   # ISO 8601 datetime the instance is removed
