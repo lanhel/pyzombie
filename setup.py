@@ -68,7 +68,9 @@ class test(Command):
         test.test_src = os.path.abspath("./test")
         test.test_dst = os.path.abspath("./build/test")
         sys.path[0] = os.path.abspath(test.test_dst)
-        logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.NOTSET)
+        logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
+                level=logging.NOTSET,
+                filename=os.path.abspath("./build/test/logfile.txt"))
     
     def finalize_options(self):
         if os.path.isdir(test.test_dst):

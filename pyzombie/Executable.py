@@ -26,6 +26,7 @@ __all__ = ['Executable']
 
 import sys
 import os
+import stat
 from datetime import datetime
 import mimetypes
 import weakref
@@ -146,6 +147,8 @@ class Executable:
             databuf = fp.read(4096)
         execfile.flush()
         execfile.close()
+        os.chmod(self.binpath, stat.S_IRWXU)
+        
             
     def isrunning(self, edir):
         return instances

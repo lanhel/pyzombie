@@ -36,10 +36,11 @@ from pyzombie.Instance import Instance
 from pyzombie.ZombieConfig import config, datadir
 
 
-class InstancePropertiesRunTest(unittest.TestCase):
+class InstancePropertiesNoRunTest(unittest.TestCase):
     """Check that properties are correctly initialized for running process."""
+
     def setUp(self):
-        self.ex = Executable("testinstance", mediatype="text/x-python")
+        self.ex = Executable("testinstancePropertiesNoRun", mediatype="text/x-python")
         self.inst_name = Instance.createname()
         self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
         self.inst = Instance(self.ex, self.inst_name)
@@ -49,7 +50,7 @@ class InstancePropertiesRunTest(unittest.TestCase):
 
     def runTest(self):
         self.assertEqual(self.inst.datadir, self.inst_dir)
-        self.assertEqual(self.ex.name, "testinstance")
+        self.assertEqual(self.ex.name, "testinstancePropertiesNoRun")
         self.assertEqual(self.inst.workdir, os.path.join(self.inst_dir, "var"))
         self.assertEqual(self.inst.tmpdir, os.path.join(self.inst_dir, "tmp"))
         self.assertGreater(self.inst.timeout, datetime.utcnow() + timedelta(seconds=4))
@@ -66,9 +67,25 @@ class InstancePropertiesRunTest(unittest.TestCase):
 
 
 class InstanceIOTest(unittest.TestCase):
-    """Check that the instance state is saved and loaded correctly."""
+    """Check that standard input, output, and error are working properly."""
+
+    source = """#!/usr/bin/env /usr/local/bin/python3.1
+import sys
+
+lineno = 0
+line = sys.stdin.readline()
+while line:
+    line = line.rstrip()
+    print("{0}: {1}".format(lineno, line))
+    lineno = lineno + 1
+    line = sys.stdin.readline()
+print("EOF")
+print("Standard error", file=sys.stderr)
+"""
+
     def setUp(self):
-        self.ex = Executable("testinstance", mediatype="text/x-python")
+        self.ex = Executable("testinstanceIO", mediatype="text/x-python")
+        self.ex.writeimage(io.StringIO(self.source))
         self.inst_name = Instance.createname()
         self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
         self.inst = Instance(self.ex, self.inst_name)
@@ -77,7 +94,24 @@ class InstanceIOTest(unittest.TestCase):
         shutil.rmtree(self.ex.dirpath)
 
     def runTest(self):
-        pass
-        val = "Hello world"
+        self.assertEqual(self.inst.datadir, self.inst_dir)
+        self.assertIsNotNone(self.inst.process)
+        self.assertLess(self.inst.start, datetime.utcnow())
+        self.assertIsNone(self.inst.end)
+        self.assertIsNone(self.inst.returncode)
+        self.assertEqual(self.inst.stdout_path, os.path.join(self.inst_dir, "stdout.txt"))
+        self.assertEqual(self.inst.stderr_path, os.path.join(self.inst_dir, "stderr.txt"))
+        self.assertIsNotNone(self.inst.stdin)
+        self.assertIsNotNone(self.inst.stdout)
+        self.assertIsNotNone(self.inst.stderr)
+        
+        self.inst.stdin.write(b"My line 1\n")
+        self.inst.stdin.write(b"My line 2\n")
+        self.inst.stdin.flush()
+        self.inst.stdin.close()
+        self.inst.process.wait()
+        #self.assertEqual(self.inst.returncode, self.inst.process.wait())
+        self.assertEqual(self.inst.stdout.read(), """0: My line 1\n1: My line 2\nEOF\n""")
+        self.assertEqual(self.inst.stderr.read(), "Standard error\n")
 
 

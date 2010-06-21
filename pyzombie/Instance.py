@@ -31,6 +31,7 @@ import errno
 from datetime import datetime, timedelta
 import json
 import subprocess
+import logging
 from .ZombieConfig import config, datadir
 
 
@@ -74,7 +75,8 @@ class Instance:
         is still running.
     stdin
         The file like object to feed data into the instance. If the instance
-        has completed execution this will be a closed file.
+        has completed execution this will be a closed file. Closing this
+        stream will send an EOF to the process instance.
     stdout_path
         This is the path to the stored stdout file.
     stdout
@@ -119,6 +121,7 @@ class Instance:
         self.__arguments = arguments
         self.__process = None
         self.__timeout_delta = timedelta(seconds=5)
+        self.__stdin = None
         self.__stdout = None
         self.__stderr = None
         self.__load()
@@ -131,12 +134,24 @@ class Instance:
             open(self.stderr_path, 'wt').close()
         
         if self.returncode is None and self.process is None:
-            #start the process
-            pass
+            try:
+                args = list(self.arguments)
+                args.insert(0, "{0}_{1}".format(self.executable.name, self.name))
+                
+                stdout = open(self.stdout_path, mode='wt', encoding='UTF-8')
+                stderr = open(self.stderr_path, mode='wt', encoding='UTF-8')
+                self.__process = subprocess.Popen(args, executable=self.executable.binpath,
+                    stdin=subprocess.PIPE, stdout=stdout, stderr=stderr,
+                    cwd=self.workdir, env=self.environ)
+            except OSError as err:
+                if err.errno != errno.ENOENT:
+                    raise err
+                logging.getLogger("zombie").warn(
+                    "Unable to find executable for instance {0}/{1}.".format(self.executable.name, self.name))
             self.__save()
         
         executable.instances.append(self)
-        
+            
     @property
     def executable(self):
         return self.__executable
