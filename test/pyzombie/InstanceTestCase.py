@@ -36,7 +36,8 @@ from pyzombie.Instance import Instance
 from pyzombie.ZombieConfig import config, datadir
 
 
-class InstanceBase(unittest.TestCase):
+class InstancePropertiesRunTest(unittest.TestCase):
+    """Check that properties are correctly initialized for running process."""
     def setUp(self):
         self.ex = Executable("testinstance", mediatype="text/x-python")
         self.inst_name = Instance.createname()
@@ -46,19 +47,35 @@ class InstanceBase(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.ex.dirpath)
 
-
-class InstancePropertiesTest(InstanceBase):
-
     def runTest(self):
-        self.assertEqual(self.inst_dir, self.inst.datadir)
-        self.assertEqual("testinstance", self.ex.name)
-        self.assertEqual(os.path.join(self.inst_dir, "var"), self.inst.workdir)
-        self.assertEqual(os.path.join(self.inst_dir, "tmp"), self.inst.tmpdir)
+        self.assertEqual(self.inst.datadir, self.inst_dir)
+        self.assertEqual(self.ex.name, "testinstance")
+        self.assertEqual(self.inst.workdir, os.path.join(self.inst_dir, "var"))
+        self.assertEqual(self.inst.tmpdir, os.path.join(self.inst_dir, "tmp"))
         self.assertGreater(self.inst.timeout, datetime.utcnow() + timedelta(seconds=4))
         self.assertGreater(self.inst.remove, datetime.utcnow() + timedelta(days=6))
         self.assertIsNone(self.inst.process)
+        self.assertLess(self.inst.start, datetime.utcnow())
+        self.assertIsNone(self.inst.end)
+        self.assertIsNone(self.inst.returncode)
+        self.assertEqual(self.inst.stdout_path, os.path.join(self.inst_dir, "stdout.txt"))
+        self.assertEqual(self.inst.stderr_path, os.path.join(self.inst_dir, "stderr.txt"))
+        self.assertIsNotNone(self.inst.stdin)
+        self.assertIsNotNone(self.inst.stdout)
+        self.assertIsNotNone(self.inst.stderr)
 
-class InstanceIOTest(InstanceBase):
+
+class InstanceIOTest(unittest.TestCase):
+    """Check that the instance state is saved and loaded correctly."""
+    def setUp(self):
+        self.ex = Executable("testinstance", mediatype="text/x-python")
+        self.inst_name = Instance.createname()
+        self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
+        self.inst = Instance(self.ex, self.inst_name)
+
+    def tearDown(self):
+        shutil.rmtree(self.ex.dirpath)
+
     def runTest(self):
         pass
         val = "Hello world"

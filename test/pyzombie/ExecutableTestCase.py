@@ -43,7 +43,7 @@ class ExecutableBase(unittest.TestCase):
 
 
 class ExecutablePropertiesTest(ExecutableBase):
-
+    """Check that properties are correctly initialized."""
     def runTest(self):
         self.assertEqual(datadir(), self.ex.datadir)
         self.assertEqual(config.get("pyzombie_filesystem", "execbase"), self.ex.execbase)
@@ -55,6 +55,7 @@ class ExecutablePropertiesTest(ExecutableBase):
     
 
 class ExecutableIOTest(ExecutableBase):
+    """Check that the executable image is correctly saved."""
     def runTest(self):
         val = "Hello world"
         buf = io.StringIO()

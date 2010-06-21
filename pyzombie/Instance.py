@@ -209,8 +209,8 @@ class Instance:
     
     @property
     def stdout(self):
-        if not self.__stdout and self.__stdout.closed:
-            self._stdout.open(self.stdout_path, mode='rt', encoding='UTF-8')
+        if self.__stdout is None or self.__stdout.closed:
+            self.__stdout = open(self.stdout_path, mode='rt', encoding='UTF-8')
         return self.__stdout
     
     @property
@@ -219,8 +219,8 @@ class Instance:
     
     @property
     def stderr(self):
-        if not self.__stderr and self.__stderr.closed:
-            self._stderr.open(self.stdout_path, mode='rt', encoding='UTF-8')
+        if self.__stderr is None or self.__stderr.closed:
+            self.__stderr = open(self.stderr_path, mode='rt', encoding='UTF-8')
         return self.__stderr
 
     DATETIME_FMT = '%Y-%m-%dT%H:%M:%SZ'
