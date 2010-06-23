@@ -117,6 +117,35 @@ print("Standard error", file=sys.stderr)
         self.assertEqual(self.inst.stderr.read(), "Standard error\n")
 
 
+class InstanceArgumentsTest(unittest.TestCase):
+    """Check that the arguments are being passed correctly."""
+    
+    source = """#!/usr/bin/env /usr/local/bin/python3.1
+import sys
+for a in sys.argv:
+    print(a)
+"""
+
+    def setUp(self):
+        self.arguments = ['-a', '-b', '--xyz']
+        self.ex = Executable("testinstanceArguments", mediatype="text/x-python")
+        self.ex.writeimage(io.StringIO(self.source))
+        self.inst_name = Instance.createname()
+        self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
+        self.inst = Instance(self.ex, self.inst_name, arguments=self.arguments)
+
+    def tearDown(self):
+        shutil.rmtree(self.ex.dirpath)
+
+    def runTest(self):
+        self.assertIsNotNone(self.inst.process)
+        self.inst.stdin.close()
+        self.assertEqual(0, self.inst.process.wait())
+        argv = self.inst.stdout.read()
+        for a in self.arguments:
+            self.assertTrue(a in argv)
+
+
 class InstanceEnvironTest(unittest.TestCase):
     """Check that the environment is being set correctly."""
     
@@ -132,16 +161,16 @@ for k in os.environ.keys():
         self.ex.writeimage(io.StringIO(self.source))
         self.inst_name = Instance.createname()
         self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
-        self.inst = Instance(self.ex, self.inst_name, self.environ)
+        self.inst = Instance(self.ex, self.inst_name, environ=self.environ)
 
-    #def tearDown(self):
-    #    shutil.rmtree(self.ex.dirpath)
+    def tearDown(self):
+        shutil.rmtree(self.ex.dirpath)
 
     def runTest(self):
         self.assertIsNotNone(self.inst.process)
         self.inst.stdin.close()
         self.assertEqual(0, self.inst.process.wait())
         env = self.inst.stdout.read()
-        self.assertTrue("env0 : abc" in env)
-        self.assertTrue("env1 : 123" in env)
+        for k in self.environ.keys():
+            self.assertTrue("{0} : {1}".format(k, self.environ[k]) in env)
 
