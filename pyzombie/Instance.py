@@ -31,8 +31,40 @@ import errno
 from datetime import datetime, timedelta
 import json
 import subprocess
+from threading import Thread
+from time import sleep
 import logging
 from .ZombieConfig import config, datadir
+
+
+DELTA_T = 0.01
+
+
+class ActiveTest(Thread):
+    """Determine if the list of active instances are still executing."""
+    
+    def __init__(self):
+        super().__init__(name="Instances Alive Test")
+        self.daemon = True
+        self.__instances = set()
+        self.start()
+    
+    def run(self):
+        """Poll the child process on a regular schedule to determine still alive."""
+        logging.getLogger("zombie").info("Start %s", self.name)
+        while (True):
+            sleep(DELTA_T)
+            self.__instances -= set([i for i in self.instances if i.process is None])
+            stopped = [i for i in self.instances if i.process.poll() is not None]
+            self.__instances -= set(stopped)
+            for i in stopped:
+                i._Instance__returncode = i.process.returncode
+        logging.getLogger("zombie").info("End %s", self.name)
+    
+    @property
+    def instances(self):
+        return self.__instances
+activetest = ActiveTest()
 
 
 class Instance:
@@ -143,6 +175,7 @@ class Instance:
                 self.__process = subprocess.Popen(args, executable=self.executable.binpath,
                     stdin=subprocess.PIPE, stdout=stdout, stderr=stderr,
                     cwd=self.workdir, env=self.environ)
+                activetest.instances.add(self)
             except OSError as err:
                 if err.errno != errno.ENOENT:
                     raise err
@@ -151,6 +184,9 @@ class Instance:
             self.__save()
         
         executable.instances.append(self)
+    
+    #self.process.terminate()
+    #self.process.kill()
             
     @property
     def executable(self):
@@ -285,3 +321,9 @@ class Instance:
             self.__start = datetime.utcnow()
             self.__end = None
             self.__returncode = None
+
+
+
+
+
+

@@ -29,10 +29,12 @@ import os
 import io
 import shutil
 from datetime import datetime, timedelta
+from time import sleep
 import unittest
 import pyzombie
 from pyzombie.Executable import Executable
 from pyzombie.Instance import Instance
+from pyzombie.Instance import DELTA_T
 from pyzombie.ZombieConfig import config, datadir
 
 
@@ -71,7 +73,6 @@ class InstanceIOTest(unittest.TestCase):
 
     source = """#!/usr/bin/env /usr/local/bin/python3.1
 import sys
-
 lineno = 0
 line = sys.stdin.readline()
 while line:
@@ -109,9 +110,38 @@ print("Standard error", file=sys.stderr)
         self.inst.stdin.write(b"My line 2\n")
         self.inst.stdin.flush()
         self.inst.stdin.close()
-        self.inst.process.wait()
-        #self.assertEqual(self.inst.returncode, self.inst.process.wait())
+        returncode = self.inst.process.wait()
+        sleep(DELTA_T)
+        self.assertEqual(self.inst.returncode, returncode)
         self.assertEqual(self.inst.stdout.read(), """0: My line 1\n1: My line 2\nEOF\n""")
         self.assertEqual(self.inst.stderr.read(), "Standard error\n")
 
+
+class InstanceEnvironTest(unittest.TestCase):
+    """Check that the environment is being set correctly."""
+    
+    source = """#!/usr/bin/env /usr/local/bin/python3.1
+import os
+for k in os.environ.keys():
+    print(k, ":", os.environ[k])
+"""
+
+    def setUp(self):
+        self.environ = {'env0':'abc', 'env1':'123'}
+        self.ex = Executable("testinstanceEnviron", mediatype="text/x-python")
+        self.ex.writeimage(io.StringIO(self.source))
+        self.inst_name = Instance.createname()
+        self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
+        self.inst = Instance(self.ex, self.inst_name, self.environ)
+
+    #def tearDown(self):
+    #    shutil.rmtree(self.ex.dirpath)
+
+    def runTest(self):
+        self.assertIsNotNone(self.inst.process)
+        self.inst.stdin.close()
+        self.assertEqual(0, self.inst.process.wait())
+        env = self.inst.stdout.read()
+        self.assertTrue("env0 : abc" in env)
+        self.assertTrue("env1 : 123" in env)
 
