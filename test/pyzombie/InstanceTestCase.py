@@ -48,7 +48,7 @@ class InstancePropertiesNoRunTest(unittest.TestCase):
         self.inst = Instance(self.ex, self.inst_name)
 
     def tearDown(self):
-        shutil.rmtree(self.ex.dirpath)
+        self.ex.delete()
 
     def runTest(self):
         self.assertEqual(self.inst.datadir, self.inst_dir)
@@ -92,7 +92,7 @@ print("Standard error", file=sys.stderr)
         self.inst = Instance(self.ex, self.inst_name)
 
     def tearDown(self):
-        shutil.rmtree(self.ex.dirpath)
+        self.ex.delete()
 
     def runTest(self):
         self.assertEqual(self.inst.datadir, self.inst_dir)
@@ -135,7 +135,7 @@ for a in sys.argv:
         self.inst = Instance(self.ex, self.inst_name, arguments=self.arguments)
 
     def tearDown(self):
-        shutil.rmtree(self.ex.dirpath)
+        self.ex.delete()
 
     def runTest(self):
         self.assertIsNotNone(self.inst.process)
@@ -164,7 +164,7 @@ for k in os.environ.keys():
         self.inst = Instance(self.ex, self.inst_name, environ=self.environ)
 
     def tearDown(self):
-        shutil.rmtree(self.ex.dirpath)
+        self.ex.delete()
 
     def runTest(self):
         self.assertIsNotNone(self.inst.process)

@@ -58,20 +58,10 @@ class HandlerExec(Handler):
         ctype, pdict = cgi.parse_header(self.req.headers['Content-Type'])
         if ctype != self.executable.mediatype:
             self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
-        
-
-        print(self.req.headers)
-        print(edir)
-        print(bin)
-        """
-        name = self.save_executable(self.rfile_safe())
-        self.nocache = True
-        self.status = http.client.CREATED
-        self["Location"] = self.serverurl(name)
-        self.flush()
-        """
+        self.executable.writeimage(self.rfile_safe)
 
     def delete(self):
-        print(self.req.headers)
+        self.executable.delete()
+        self.status = http.client.OK
         
 

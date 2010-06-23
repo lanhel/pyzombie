@@ -27,6 +27,7 @@ __all__ = ['Executable']
 import sys
 import os
 import stat
+import shutil
 from datetime import datetime
 import mimetypes
 import weakref
@@ -94,8 +95,35 @@ class Executable:
                 mediatype = "application/octet-stream"
             self.__bin = self.__bin + mimetypes.guess_extension(mediatype)
         self.__mediatype = mimetypes.guess_type(self.__bin)
-        self.instances = []
+        self.instances = set()
+
+    def readimage(self, fp):
+        """Read te image from the persistant store into the file object."""
+        execfile = open(self.binpath, "r")
+        databuf = execfile.read(4096)
+        while databuf:
+            fp.write(databuf)
+            databuf = fp.read(4096)
+        fp.flush()
+        execfile.close()
     
+    def writeimage(self, fp):
+        """Write the image from the file object to the persistant store."""
+        execfile = open(self.binpath, "w")
+        databuf = fp.read(4096)
+        while databuf:
+            execfile.write(databuf)
+            databuf = fp.read(4096)
+        execfile.flush()
+        execfile.close()
+        os.chmod(self.binpath, stat.S_IRWXU)
+    
+    def delete(self):
+        """Terminate all instances then remove the executable."""
+        for i in set(self.instances):
+            i.delete()
+        shutil.rmtree(self.datadir, True)
+            
     @property
     def datadir(self):
         return datadir()
@@ -127,30 +155,5 @@ class Executable:
     def mediatype(self):
         """This is the internet media type of the executable."""
         return self.__mediatype
-    
-    def readimage(self, fp):
-        """Read te image from the persistant store into the file object."""
-        execfile = open(self.binpath, "r")
-        databuf = execfile.read(4096)
-        while databuf:
-            fp.write(databuf)
-            databuf = fp.read(4096)
-        fp.flush()
-        execfile.close()
-    
-    def writeimage(self, fp):
-        """Write the image from the file object to the persistant store."""
-        execfile = open(self.binpath, "w")
-        databuf = fp.read(4096)
-        while databuf:
-            execfile.write(databuf)
-            databuf = fp.read(4096)
-        execfile.flush()
-        execfile.close()
-        os.chmod(self.binpath, stat.S_IRWXU)
-        
-            
-    def isrunning(self, edir):
-        return instances
 
 

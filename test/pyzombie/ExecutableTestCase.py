@@ -39,7 +39,7 @@ class ExecutableBase(unittest.TestCase):
         self.ex = Executable("testexec", mediatype="text/x-python")
 
     def tearDown(self):
-        shutil.rmtree(self.ex.dirpath)
+        self.ex.delete()
 
 
 class ExecutablePropertiesTest(ExecutableBase):

@@ -26,6 +26,7 @@ __all__ = ['Instance']
 
 import sys
 import os
+import shutil
 import io
 import errno
 from datetime import datetime, timedelta
@@ -53,12 +54,16 @@ class ActiveTest(Thread):
         """Poll the child process on a regular schedule to determine still alive."""
         logging.getLogger("zombie").info("Start %s", self.name)
         while (True):
-            sleep(DELTA_T)
-            self.__instances -= set([i for i in self.instances if i.process is None])
-            stopped = [i for i in self.instances if i.process.poll() is not None]
-            self.__instances -= set(stopped)
-            for i in stopped:
-                i._Instance__returncode = i.process.returncode
+            try:
+                sleep(DELTA_T)
+                self.__instances -= set([i for i in self.instances if i.process is None])
+                stopped = [i for i in self.instances if i.process.poll() is not None]
+                self.__instances -= set(stopped)
+                for i in stopped:
+                    i._Instance__returncode = i.process.returncode
+                    i._Instance__save()
+            except Exception as err:
+                logging.getLogger("zombie").warning(err)
         logging.getLogger("zombie").info("End %s", self.name)
     
     @property
@@ -147,6 +152,7 @@ class Instance:
             named instance already exists then this is ignored.
         """
         self.__executable = executable
+        self.executable.instances.add(self)
         self.__name = name
         self.__statepath = os.path.join(self.datadir, 'state.json')
         self.__environ = environ
@@ -182,11 +188,14 @@ class Instance:
                 logging.getLogger("zombie").warn(
                     "Unable to find executable for instance {0}/{1}.".format(self.executable.name, self.name))
             self.__save()
-        
-        executable.instances.append(self)
     
-    #self.process.terminate()
-    #self.process.kill()
+    def delete(self):
+        """Terminate the instance and release resources."""
+        self.executable.instances.remove(self)
+        if self.process is not None and self.process.returncode is None:
+            self.process.kill()
+            self.process.wait()
+        shutil.rmtree(self.datadir, True)
             
     @property
     def executable(self):
