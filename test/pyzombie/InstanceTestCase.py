@@ -42,7 +42,7 @@ class InstancePropertiesNoRunTest(unittest.TestCase):
     """Check that properties are correctly initialized for running process."""
 
     def setUp(self):
-        self.ex = Executable("testinstancePropertiesNoRun", mediatype="text/x-python")
+        self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
         self.inst_name = Instance.createname()
         self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
         self.inst = Instance(self.ex, self.inst_name)
@@ -52,7 +52,7 @@ class InstancePropertiesNoRunTest(unittest.TestCase):
 
     def runTest(self):
         self.assertEqual(self.inst.datadir, self.inst_dir)
-        self.assertEqual(self.ex.name, "testinstancePropertiesNoRun")
+        self.assertEqual(self.ex.name, self.__class__.__name__)
         self.assertEqual(self.inst.workdir, os.path.join(self.inst_dir, "var"))
         self.assertEqual(self.inst.tmpdir, os.path.join(self.inst_dir, "tmp"))
         self.assertGreater(self.inst.timeout, datetime.utcnow() + timedelta(seconds=4))
@@ -85,7 +85,7 @@ print("Standard error", file=sys.stderr)
 """
 
     def setUp(self):
-        self.ex = Executable("testinstanceIO", mediatype="text/x-python")
+        self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
         self.ex.writeimage(io.StringIO(self.source))
         self.inst_name = Instance.createname()
         self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
@@ -128,7 +128,7 @@ for a in sys.argv:
 
     def setUp(self):
         self.arguments = ['-a', '-b', '--xyz']
-        self.ex = Executable("testinstanceArguments", mediatype="text/x-python")
+        self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
         self.ex.writeimage(io.StringIO(self.source))
         self.inst_name = Instance.createname()
         self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
@@ -157,7 +157,7 @@ for k in os.environ.keys():
 
     def setUp(self):
         self.environ = {'env0':'abc', 'env1':'123'}
-        self.ex = Executable("testinstanceEnviron", mediatype="text/x-python")
+        self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
         self.ex.writeimage(io.StringIO(self.source))
         self.inst_name = Instance.createname()
         self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)

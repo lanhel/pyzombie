@@ -40,10 +40,10 @@ class HandlerExecSetGetEmptyTest(unittest.TestCase):
         hndlr.get()
 
         resp = HTTPResponse(req.wfile.getvalue())
-        self.assertEqual("HTTP/1.1", resp.protocol)
-        self.assertEqual("200", resp.code)
-        self.assertEqual("OK", resp.message)
-        self.assertEqual("text/html;UTF-8", resp.header["Content-Type"])
+        self.assertEqual(resp.protocol, "HTTP/1.1")
+        self.assertEqual(resp.code, "200")
+        self.assertEqual(resp.message, "OK")
+        self.assertEqual(resp.header["Content-Type"], "text/html;UTF-8")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
 
@@ -63,9 +63,9 @@ class HandlerExecSetPostTest(unittest.TestCase):
         hndlr.post()
         
         resp = HTTPResponse(req.wfile.getvalue())        
-        self.assertEqual("HTTP/1.1", resp.protocol)
-        self.assertEqual("201", resp.code)
-        self.assertEqual("Created", resp.message)
+        self.assertEqual(resp.protocol, "HTTP/1.1")
+        self.assertEqual(resp.code, "201")
+        self.assertEqual(resp.message, "Created")
         self.assertRegexpMatches(resp.header["Location"], self.LOC_RE)
         self.assertEqual(int(resp.header["Content-Length"]), 0)
         

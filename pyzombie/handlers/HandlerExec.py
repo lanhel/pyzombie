@@ -53,15 +53,20 @@ class HandlerExec(Handler):
     
     def get(self):
         self.writefile(self.executable.binpath)
+        self.status = http.client.OK
+        self.flush()
         
     def put(self):
         ctype, pdict = cgi.parse_header(self.req.headers['Content-Type'])
-        if ctype != self.executable.mediatype:
+        if ctype != self.executable.mediatype[0]:
             self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
-        self.executable.writeimage(self.rfile_safe)
+        self.executable.writeimage(self.rfile_safe())
+        self.status = http.client.OK
+        self.flush()
 
     def delete(self):
         self.executable.delete()
         self.status = http.client.OK
+        self.flush()
         
 

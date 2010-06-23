@@ -36,7 +36,7 @@ from pyzombie.ZombieConfig import config, datadir
 
 class ExecutableBase(unittest.TestCase):
     def setUp(self):
-        self.ex = Executable("testexec", mediatype="text/x-python")
+        self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
 
     def tearDown(self):
         self.ex.delete()
@@ -48,9 +48,9 @@ class ExecutablePropertiesTest(ExecutableBase):
         self.assertEqual(datadir(), self.ex.datadir)
         self.assertEqual(config.get("pyzombie_filesystem", "execbase"), self.ex.execbase)
         self.assertEqual(config.get("pyzombie_filesystem", "binary"), self.ex.binaryname)
-        self.assertEqual("testexec", self.ex.name)
-        self.assertEqual(os.path.join(datadir(), "testexec"), self.ex.dirpath)
-        self.assertEqual(os.path.join(datadir(), "testexec", self.ex.binaryname + ".py"), self.ex.binpath)
+        self.assertEqual(self.__class__.__name__, self.ex.name)
+        self.assertEqual(os.path.join(datadir(), self.__class__.__name__), self.ex.dirpath)
+        self.assertEqual(os.path.join(datadir(), self.__class__.__name__, self.ex.binaryname + ".py"), self.ex.binpath)
         self.assertEqual(("text/x-python", None), self.ex.mediatype)
     
 
