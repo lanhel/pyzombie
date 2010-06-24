@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 #$Id: setup.py 902 2009-10-16 16:38:28Z lance $
 #-------------------------------------------------------------------------------
-"""pyzombie HTTP RESTful handler."""
+"""pyzombie HTTP RESTful handler test cases."""
 __author__ = ('Lance Finn Helsten',)
 __version__ = '0.0'
 __copyright__ = """Copyright (C) 2009 Lance Finn Helsten"""

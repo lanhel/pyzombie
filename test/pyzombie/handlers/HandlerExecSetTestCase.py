@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 #$Id: setup.py 902 2009-10-16 16:38:28Z lance $
 #-------------------------------------------------------------------------------
-"""pyzombie HTTP RESTful handler."""
+"""pyzombie HTTP RESTful handler test cases."""
 __author__ = ('Lance Finn Helsten',)
 __version__ = '0.0'
 __copyright__ = """Copyright (C) 2009 Lance Finn Helsten"""
@@ -49,10 +49,10 @@ class HandlerExecSetGetEmptyTest(unittest.TestCase):
 
 
 class HandlerExecSetPostTest(unittest.TestCase):
-    LOC_RE = r"""http://MockServer:8008/(zombie_\d{7}T\d{6}Z)"""
+    LOC_RE = r"""http://MockServer:8008/(zombie_\d{7}T\d{6}Z(_\d{3})?)"""
     
     def runTest(self):
-        data = b"ExecSetPostTest"
+        data = self.__class__.__name__.encode("UTF-8")
 
         req = MockRequest()
         req.rfile.write(data)
