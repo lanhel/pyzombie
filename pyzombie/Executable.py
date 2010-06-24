@@ -60,7 +60,20 @@ class Executable:
         """Create a unique RESTful name for a new executable."""
         name = config.get("pyzombie_filesystem", "execbase")
         name = "{0}_{1}".format(name, datetime.utcnow().strftime("%Y%jT%H%M%SZ"))
+        if os.path.isdir(Executable.execdirpath(name)):
+            #Need to handle the rare case of duplicate resource names---this
+            #will happen all the time in testing, but rarely in production.
+            index = 0
+            altname = "{0}_{1:03}".format(name, index)
+            while os.path.isdir(Executable.execdirpath(altname)):
+                index = index + 1
+                altname = "{0}_{1:03}".format(name, index)
+            name = altname
         return name
+    
+    @classmethod
+    def execdirpath(cls, name):
+        return os.path.normpath(os.path.join(datadir(), name))
     
     __cache = {}
     
@@ -83,7 +96,7 @@ class Executable:
             will default to application/octet-stream.
         """
         self.__name = name
-        self.__edir = os.path.normpath(os.path.join(self.datadir, name))
+        self.__edir = Executable.execdirpath(name)
         self.__bin = os.path.normpath(os.path.join(self.__edir, self.binaryname))
         if os.path.isdir(self.__edir):
             fnames = [f for f in os.listdir(self.__edir) if f.startswith(self.binaryname)]
@@ -122,7 +135,7 @@ class Executable:
         """Terminate all instances then remove the executable."""
         for i in set(self.instances):
             i.delete()
-        shutil.rmtree(self.datadir, True)
+        shutil.rmtree(self.dirpath, True)
             
     @property
     def datadir(self):

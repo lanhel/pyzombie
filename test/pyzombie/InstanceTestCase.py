@@ -140,6 +140,7 @@ for a in sys.argv:
     def runTest(self):
         self.assertIsNotNone(self.inst.process)
         self.inst.stdin.close()
+        self.assertNotEqual(0, self.inst.process.pid, "Process did not start")
         self.assertEqual(0, self.inst.process.wait())
         argv = self.inst.stdout.read()
         for a in self.arguments:

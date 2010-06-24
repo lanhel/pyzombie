@@ -198,8 +198,9 @@ class Handler:
         if ctype != 'multipart/form-data':
             self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
             return None
-        fs = cgi.FieldStorage(fp=self.rfile_safe(), headers=self.req.headers,
-            environ={'REQUEST_METHOD':'POST'})
+        fp = self.rfile_safe()
+        fs = cgi.FieldStorage(fp=fp, headers=self.req.headers,
+            environ={'REQUEST_METHOD':'POST'}, strict_parsing=True)
         return fs
     
     def readline(self):

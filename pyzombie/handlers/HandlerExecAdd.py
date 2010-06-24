@@ -37,7 +37,7 @@ class HandlerExecAdd(HandlerLeftovers):
     
     @classmethod
     def dispatch(cls):
-        cls.initdispatch(r"""^/add$""", "GET,POST, OPTIONS,TRACE", "/help/RESTful")
+        cls.initdispatch(r"""^/add$""", "GET,POST,OPTIONS,TRACE", "/help/RESTful")
         return cls
     
     
@@ -48,8 +48,8 @@ class HandlerExecAdd(HandlerLeftovers):
     def post(self):
         fs = self.multipart()
         if fs:
-            type, enc = mimetypes.guess_type(fs['execfile'].filename)
-            self.initexecutable(mediatype=type)
+            ctype, enc = mimetypes.guess_type(fs['execfile'].filename)
+            self.initexecutable(mediatype=ctype)
             datafp = fs['execfile'].file
             self.executable.writeimage(datafp)
             self.nocache = True

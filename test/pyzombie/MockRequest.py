@@ -31,7 +31,30 @@ import http.client
 import unittest
 from MockServer import MockServer
 
+class MockHeaders():
+    """Handles the case insensitive nature of HTTP headers."""
+    def __init__(self):
+        self.headers = {}
+    
+    def __getitem__(self, key):
+        return self.headers[key.lower()]
+    
+    def __setitem__(self, key, value):
+        self.headers[key.lower()] = value
+    
+    def __delitem__(self, key):
+        del self.headers[key.lower()]
+    
+    def __contains__(self, key):
+        return key.lower() in self.headers
+    
+    def __str__(self):
+        ret = ["{0}: {1}".format(k, self.headers[k]) for k in self.headers.keys()]
+        return os.linesep.join(ret)
+
+
 class MockRequest():
+    """Mocks up an HTTP request for unit testing."""
     
     def __init__(self):
         self.server = MockServer()
@@ -77,9 +100,9 @@ class MockRequest():
     @property
     def headers(self):
         if not hasattr(self, '_MockRequest__headers'):
-            self.__headers = {}
+            self.__headers = MockHeaders()
         return self.__headers
-    
+        
     @property
     def wfile(self):
         if not hasattr(self, 'writebuf'):
