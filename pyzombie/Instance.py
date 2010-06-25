@@ -275,7 +275,7 @@ class Instance:
     @property
     def stdout(self):
         if self.__stdout is None or self.__stdout.closed:
-            self.__stdout = open(self.stdout_path, mode='rt', encoding='UTF-8')
+            self.__stdout = open(self.stdout_path, mode='r', encoding='UTF-8')
         return self.__stdout
     
     @property
@@ -285,7 +285,7 @@ class Instance:
     @property
     def stderr(self):
         if self.__stderr is None or self.__stderr.closed:
-            self.__stderr = open(self.stderr_path, mode='rt', encoding='UTF-8')
+            self.__stderr = open(self.stderr_path, mode='r', encoding='UTF-8')
         return self.__stderr
 
     DATETIME_FMT = '%Y-%m-%dT%H:%M:%SZ'

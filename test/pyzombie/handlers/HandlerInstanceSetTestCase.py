@@ -60,10 +60,13 @@ class HandlerInstanceSetPostJson(unittest.TestCase):
         self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
         self.ex.writeimage(open(TestSourceCLI.__file__, "r"))
     
-    #def tearDown(self):
-    #    self.ex.delete()
+    def tearDown(self):
+        self.ex.delete()
 
     def runTest(self):
+        from time import sleep
+        from pyzombie.Instance import DELTA_T
+
         data = TestSourceCLI.restful_json()
         req = MockRequest()
         req.rfile.write(data)
@@ -72,7 +75,6 @@ class HandlerInstanceSetPostJson(unittest.TestCase):
         req.headers["Content-Length"] = str(len(data))
         hndlr = HandlerInstanceSet(req, {'execname':self.__class__.__name__})
         hndlr.post()
-        hndlr.inst.stdin.close()
         
         resp = HTTPResponse(req.wfile.getvalue())        
         self.assertEqual(resp.protocol, "HTTP/1.1")
@@ -83,12 +85,14 @@ class HandlerInstanceSetPostJson(unittest.TestCase):
         
         match = re.match(self.loc_re, resp.header["Location"])        
         instance = list(hndlr.executable.instances)[0]
-        
+        instance.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
+        instance.stdin.close()
         self.assertTrue(instance.executable.name, match.group(1))
         self.assertTrue(instance.name, match.group(2))
         self.assertTrue(os.path.isdir(instance.datadir))
+        while instance.process.returncode is None:
+            sleep(DELTA_T)               
+        TestSourceCLI.validateResults(self, self.__class__.__name__, 0,
+            instance.stdout, instance.stderr)
         
-        #test to make sure json state has everything
-        #test to make sure stdout is correct
-        #test to make sure stderr is correct
 
