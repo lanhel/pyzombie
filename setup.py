@@ -65,18 +65,20 @@ class test(Command):
     
     def initialize_options(self):
         self.suite = []
-        test.test_src = os.path.abspath("./test")
-        test.test_dst = os.path.abspath("./build/test")
-        sys.path[0] = os.path.abspath(test.test_dst)
+        self.test_src = os.path.abspath("./test")
+        self.test_dst = os.path.abspath("./build/test")
+        if not os.path.isdir(self.test_dst):
+            os.makedirs(self.test_dst)
+        sys.path[0] = os.path.abspath(self.test_dst)
         logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                level=logging.NOTSET,
-                filename=os.path.abspath("./build/test/logfile.txt"))
+            level=logging.NOTSET,
+            filename=os.path.abspath("./build/test/logfile.txt"))
     
     def finalize_options(self):
-        if os.path.isdir(test.test_dst):
-            shutil.rmtree(test.test_dst)
-        shutil.copytree(test.test_src, test.test_dst)
-        for dirpath, dirnames, filenames in os.walk(test.test_dst):            
+        if os.path.isdir(self.test_dst):
+            shutil.rmtree(self.test_dst)
+        shutil.copytree(self.test_src, self.test_dst)
+        for dirpath, dirnames, filenames in os.walk(self.test_dst):            
             tests = [os.path.join(dirpath, f) for f in filenames
                     if f.endswith('Test.py') or f.endswith('TestCase.py')]
             tests = [os.path.abspath(f) for f in tests]

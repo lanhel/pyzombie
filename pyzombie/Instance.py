@@ -174,13 +174,14 @@ class Instance:
         if self.returncode is None and self.process is None:
             try:
                 args = list(self.arguments)
-                args.insert(0, "{0}_{1}".format(self.executable.name, self.name))
+                args.insert(0, "{0}:{1}".format(self.executable.name, self.name))
                 
                 stdout = open(self.stdout_path, mode='wt', encoding='UTF-8')
                 stderr = open(self.stderr_path, mode='wt', encoding='UTF-8')
-                self.__process = subprocess.Popen(args, executable=self.executable.binpath,
+                self.__process = subprocess.Popen(args,
+                    executable=self.executable.binpath,
                     stdin=subprocess.PIPE, stdout=stdout, stderr=stderr,
-                    cwd=self.workdir, env=self.environ)
+                    cwd=self.workdir, env=self.environ, shell=False)
                 activetest.instances.add(self)
             except OSError as err:
                 if err.errno != errno.ENOENT:
@@ -204,6 +205,10 @@ class Instance:
     @property
     def name(self):
         return self.__name
+    
+    @property
+    def restname(self):
+        return os.path.join(self.executable.name, 'instances', self.name)
     
     @property
     def environ(self):

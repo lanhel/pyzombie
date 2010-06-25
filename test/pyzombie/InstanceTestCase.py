@@ -36,6 +36,7 @@ from pyzombie.Executable import Executable
 from pyzombie.Instance import Instance
 from pyzombie.Instance import DELTA_T
 from pyzombie.ZombieConfig import config, datadir
+import TestSourceCLI
 
 
 class InstancePropertiesNoRunTest(unittest.TestCase):
@@ -68,28 +69,16 @@ class InstancePropertiesNoRunTest(unittest.TestCase):
         self.assertIsNotNone(self.inst.stderr)
 
 
-class InstanceIOTest(unittest.TestCase):
+class InstanceCLITest(unittest.TestCase):
     """Check that standard input, output, and error are working properly."""
-
-    source = """#!/usr/bin/env /usr/local/bin/python3.1
-import sys
-lineno = 0
-line = sys.stdin.readline()
-while line:
-    line = line.rstrip()
-    print("{0}: {1}".format(lineno, line))
-    lineno = lineno + 1
-    line = sys.stdin.readline()
-print("EOF")
-print("Standard error", file=sys.stderr)
-"""
 
     def setUp(self):
         self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
-        self.ex.writeimage(io.StringIO(self.source))
+        self.ex.writeimage(open(TestSourceCLI.__file__, "r"))
         self.inst_name = Instance.createname()
-        self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
-        self.inst = Instance(self.ex, self.inst_name)
+        self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)        
+        self.inst = Instance(self.ex, self.inst_name,
+                arguments=TestSourceCLI.ARGV, environ=TestSourceCLI.ENVIRON)
 
     def tearDown(self):
         self.ex.delete()
@@ -106,72 +95,13 @@ print("Standard error", file=sys.stderr)
         self.assertIsNotNone(self.inst.stdout)
         self.assertIsNotNone(self.inst.stderr)
         
-        self.inst.stdin.write(b"My line 1\n")
-        self.inst.stdin.write(b"My line 2\n")
+        self.inst.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
         self.inst.stdin.flush()
         self.inst.stdin.close()
+        self.assertNotEqual(0, self.inst.process.pid, "Process not started.")
         returncode = self.inst.process.wait()
         sleep(DELTA_T)
-        self.assertEqual(self.inst.returncode, returncode)
-        self.assertEqual(self.inst.stdout.read(), """0: My line 1\n1: My line 2\nEOF\n""")
-        self.assertEqual(self.inst.stderr.read(), "Standard error\n")
-
-
-class InstanceArgumentsTest(unittest.TestCase):
-    """Check that the arguments are being passed correctly."""
-    
-    source = """#!/usr/bin/env /usr/local/bin/python3.1
-import sys
-for a in sys.argv:
-    print(a)
-"""
-
-    def setUp(self):
-        self.arguments = ['-a', '-b', '--xyz']
-        self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
-        self.ex.writeimage(io.StringIO(self.source))
-        self.inst_name = Instance.createname()
-        self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
-        self.inst = Instance(self.ex, self.inst_name, arguments=self.arguments)
-
-    def tearDown(self):
-        self.ex.delete()
-
-    def runTest(self):
-        self.assertIsNotNone(self.inst.process)
-        self.inst.stdin.close()
-        self.assertNotEqual(0, self.inst.process.pid, "Process did not start")
-        self.assertEqual(0, self.inst.process.wait())
-        argv = self.inst.stdout.read()
-        for a in self.arguments:
-            self.assertTrue(a in argv)
-
-
-class InstanceEnvironTest(unittest.TestCase):
-    """Check that the environment is being set correctly."""
-    
-    source = """#!/usr/bin/env /usr/local/bin/python3.1
-import os
-for k in os.environ.keys():
-    print(k, ":", os.environ[k])
-"""
-
-    def setUp(self):
-        self.environ = {'env0':'abc', 'env1':'123'}
-        self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
-        self.ex.writeimage(io.StringIO(self.source))
-        self.inst_name = Instance.createname()
-        self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
-        self.inst = Instance(self.ex, self.inst_name, environ=self.environ)
-
-    def tearDown(self):
-        self.ex.delete()
-
-    def runTest(self):
-        self.assertIsNotNone(self.inst.process)
-        self.inst.stdin.close()
-        self.assertEqual(0, self.inst.process.wait())
-        env = self.inst.stdout.read()
-        for k in self.environ.keys():
-            self.assertTrue("{0} : {1}".format(k, self.environ[k]) in env)
+        TestSourceCLI.validateResults(self,
+                "{0}_{1}".format(self.ex.name, self.inst_name),
+                self.inst.returncode, self.inst.stdout, self.inst.stderr)
 

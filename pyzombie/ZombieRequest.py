@@ -53,10 +53,7 @@ DISPATCH_TABLE = [
             "GET,OPTIONS,TRACE",
             "/help/RESTful"),
         
-        Handler.initdispatch(#"Instance Set",
-            r"""^/(?P<execname>\w+)/instances/$""",
-            "GET,POST,OPTIONS,TRACE",
-            "/help/RESTful"),
+        HandlerInstanceSet.dispatch(),
         
         Handler.initdispatch(#"Instance",
             r"""^/(?P<execname>\w+)/instances/(?P<instname>\w+)/?$""",

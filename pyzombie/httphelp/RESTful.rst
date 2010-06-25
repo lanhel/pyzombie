@@ -44,6 +44,7 @@ URL
         **Representation:**
             ``Content-Type``
                 * ``application/yaml``
+                * ``application/json``
                 * ``text/html``
                 * ``application/xhtml+xml``
         
@@ -143,6 +144,7 @@ URL
         **Representation:**
             ``Content-Type``
                 * ``application/yaml``
+                * ``application/json``
                 * ``text/html``
                 * ``application/xhtml+xml``
         
@@ -154,6 +156,7 @@ URL
         **Representation:**
             ``Content-Type``
                 * ``application/yaml``
+                * ``application/json``
 
         **Response**
             ``Location``: executable instance URL
@@ -170,6 +173,7 @@ URL
         **Representation:**
             ``Content-Type``
                 * ``application/yaml``
+                * ``application/json``
 
         
     DELETE
@@ -267,7 +271,47 @@ JavaScript, Ruby, Python, and PHP.
     optional:
         
             
+JSON
+^^^^^^^^^^^^^^^^^^^^
+The following schemata is written in Rx_ which has validators for Perl,
+JavaScript, Ruby, Python, and PHP.
 
+**Content-Type**:  ``application/json``.
+
+* Create Executable Instance::
+
+    ---- # Executable Instance Creation
+    type:               //rec
+    required:
+    optional:
+        environment:
+            type:       //map
+            values:     //str
+        arguments:
+            type:       //arr
+            contents:   {type: //str}
+            length:     {min: 1}
+
+
+* Executable Instance Representation::
+
+    ---- # Executable Instance
+    type:               //rec
+    required:
+        self:           //str   # URL to this representation
+        executable:     //str   # URL to the executable representation
+        returncode:     //one
+            # Integer is the exit code when instance has terminated
+            # String is the ISO 8601 datetime when instance shall be forced to terminate
+        remove:         //str   # ISO 8601 datetime the instance is removed
+        environment:
+            type:       //map
+            values:     //str
+        arguments:
+            type:       //arr
+            contents:   {type: //str}
+            length:     {min: 1}
+    optional:
 
 
 HTML

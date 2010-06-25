@@ -23,6 +23,7 @@ from .HandlerHelp import *
 from .HandlerExecSet import *
 from .HandlerExecAdd import *
 from .HandlerExec import *
+from .HandlerInstanceSet import *
 from .HandlerLeftovers import *
 
 
