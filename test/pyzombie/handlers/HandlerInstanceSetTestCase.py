@@ -85,7 +85,10 @@ class HandlerInstanceSetPostJson(unittest.TestCase):
         
         match = re.match(self.loc_re, resp.header["Location"])        
         instance = list(hndlr.executable.instances)[0]
+        self.assertIsNotNone(instance.process)
+        self.assertIsNone(instance.process.returncode)
         instance.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
+        self.assertIsNone(instance.process.returncode)
         instance.stdin.close()
         self.assertTrue(instance.executable.name, match.group(1))
         self.assertTrue(instance.name, match.group(2))
