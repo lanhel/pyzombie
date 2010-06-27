@@ -46,7 +46,8 @@ INDEX_HTML = """<!DOCTYPE html>
     <link rel="Contents" href="/"/>
 </head>
 <body>
-  <h1>pyzombie Help</h1>
+  <h1>pyzombie</h1>
+  <h2>Executables</h2>
   <ol>
 {0}
   </ol>
@@ -60,7 +61,9 @@ INDEX_ROW = """    <li><a href="{0}">{0}</a></li>"""
 class HandlerExecSet(Handler):    
     @classmethod
     def dispatch(cls):
-        cls.initdispatch(r"""^/$""", "GET,POST,OPTIONS,TRACE", "/help/RESTful")
+        cls.initdispatch(r"""^/$""",
+                "GET,POST,OPTIONS,TRACE",
+                "/help/RESTful")
         return cls
             
     def head(self):

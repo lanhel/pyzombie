@@ -42,15 +42,16 @@ from ..Instance import Instance
 INDEX_HTML = """<!DOCTYPE html>
 <html lang='en'>
 <head>
-    <title>pyzombie Executables</title>
+    <title>pyzombie {0} Instances</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta http-equiv='copyright' content='Lance Finn Helsten'/>
     <link rel="Contents" href="/"/>
 </head>
 <body>
-  <h1>pyzombie Help</h1>
+  <h1>pyzombie</h1>
+  <h2>{0} Instances</h2>
   <ol>
-{0}
+{1}
   </ol>
 </body>
 </html>
@@ -62,7 +63,9 @@ INDEX_ROW = """    <li><a href="{0}">{0}</a></li>"""
 class HandlerInstanceSet(Handler):    
     @classmethod
     def dispatch(cls):
-        cls.initdispatch(r"""^/instances/$""", "GET,POST,OPTIONS,TRACE", "/help/RESTful")
+        cls.initdispatch(r"""^/(?P<execname>\w+)/instances/$""",
+                "GET,POST,OPTIONS,TRACE",
+                "/help/RESTful")
         return cls
             
     def head(self):
@@ -75,7 +78,7 @@ class HandlerInstanceSet(Handler):
                 for d in os.listdir(self.executable.dirpath)
                 if os.path.isdir(os.path.join(self.executable.dirpath, d))]
         body = os.linesep.join(dirs)
-        html = INDEX_HTML.format(body)
+        html = INDEX_HTML.format(self.executable.name, body)
         
         self.status = http.client.OK
         self["Cache-Control"] = "public max-age=3600"

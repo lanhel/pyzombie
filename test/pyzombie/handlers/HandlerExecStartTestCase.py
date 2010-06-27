@@ -29,73 +29,78 @@ import io
 import re
 import unittest
 from time import sleep
+import http.client
 from pyzombie.Executable import Executable
 from pyzombie.Instance import DELTA_T
-from pyzombie.handlers import HandlerInstanceSet
+from pyzombie.handlers import HandlerExecStart
 from MockRequest import MockRequest
 from HTTPResponse import HTTPResponse
 import TestSourceCLI
 
 
-class HandlerInstanceSetGetEmpty(unittest.TestCase):
+class HandlerExecStartGetTest(unittest.TestCase):
     def runTest(self):
         req = MockRequest()
-        hndlr = HandlerInstanceSet(req, {})
+        hndlr = HandlerExecStart(req, {'execname':self.__class__.__name__})
         hndlr.get()
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, "200")
-        self.assertEqual(resp.message, "OK")
+        self.assertEqual(resp.code, str(http.client.OK))
         self.assertEqual(resp.header["Content-Type"], "text/html;UTF-8")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
 
 
-class HandlerInstanceSetPostJson(unittest.TestCase):
+class HandlerExecStartPostTest(unittest.TestCase):    
     
     def setUp(self):
-        self.loc_re = r"http://MockServer:8008/" + \
-            "(" + self.__class__.__name__ + ")" + \
-            "/instances/(run_\d{7}T\d{6}Z?)"
-
         self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
         self.ex.writeimage(open(TestSourceCLI.__file__, "r"))
-    
-    def tearDown(self):
-        self.ex.delete()
+        self.boundary = """NoBodyExpectsTheSpanishInquisition"""
+        environ = TestSourceCLI.ENVIRON
+        environ = ["{0} = {1}".format(k, environ[k]) for k in environ.keys()]
+        environ = os.linesep.join(environ)
+        argv = TestSourceCLI.ARGV
+        argv = ' '.join(argv)
+        self.form = """
+--{0}
+Content-Disposition: form-data; name="environ"
+
+{1}
+--{0}
+Content-Disposition: form-data; name="arguments"
+
+{2}
+--{0}--
+
+
+""".format(self.boundary, environ, argv)
+        self.form = self.form.replace(os.linesep, '\r\n')
+        self.form = self.form.encode("UTF-8")
 
     def runTest(self):
-
-        data = TestSourceCLI.restful_json()
         req = MockRequest()
-        req.rfile.write(data)
-        req.rfile.seek(0)
-        req.headers["Content-Type"] = "application/json"
-        req.headers["Content-Length"] = str(len(data))
-        hndlr = HandlerInstanceSet(req, {'execname':self.__class__.__name__})
+        req.readbuf = io.BytesIO(self.form)
+        req.headers["Content-Type"] = "multipart/form-data; boundary={0}".format(self.boundary)
+        req.headers["Content-Length"] = str(len(self.form))
+        hndlr = HandlerExecStart(req, {'execname':self.ex.name})
         hndlr.post()
         
         resp = HTTPResponse(req.wfile.getvalue())        
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, "201")
-        self.assertEqual(resp.message, "Created")
-        self.assertRegexpMatches(resp.header["Location"], self.loc_re)
-        self.assertEqual(int(resp.header["Content-Length"]), 0)
-        
-        match = re.match(self.loc_re, resp.header["Location"])        
-        instance = list(hndlr.executable.instances)[0]
-        self.assertIsNotNone(instance.process)
-        self.assertIsNone(instance.process.returncode)
-        instance.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
-        self.assertIsNone(instance.process.returncode)
-        instance.stdin.close()
-        self.assertTrue(instance.executable.name, match.group(1))
-        self.assertTrue(instance.name, match.group(2))
-        self.assertTrue(os.path.isdir(instance.datadir))
-        while instance.process.returncode is None:
+        self.assertEqual(resp.code, str(http.client.CREATED))
+
+        self.assertIsNotNone(hndlr.inst.process)
+        self.assertIsNone(hndlr.inst.process.returncode)
+        hndlr.inst.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
+        self.assertIsNone(hndlr.inst.process.returncode)
+        hndlr.inst.stdin.close()
+        self.assertTrue(os.path.isdir(hndlr.inst.datadir))
+        while hndlr.inst.process.returncode is None:
             sleep(DELTA_T)               
         TestSourceCLI.validateResults(self, self.__class__.__name__, 0,
-            instance.stdout, instance.stderr)
+            hndlr.inst.stdout, hndlr.inst.stderr)
         
-
+        
+    

@@ -47,14 +47,19 @@ class HandlerLeftovers(Handler):
         cls.initdispatch(r"""^/(?P<leftover>.+)?$""",
             "GET,OPTIONS,TRACE", "/help/RESTful")
         return cls
+    
+    def filepath(self):
+        """Return the normalized path to the HTTP file identified by "leftover"."""
+        file = os.path.join(HTTPFILES, self.urlargs["leftover"])
+        file = os.path.normpath(file)
+        return file
                 
     def head(self):
         self.content = "Headers"
         self.get()
     
     def get(self):
-        file = os.path.join(HTTPFILES, self.urlargs["leftover"])
-        file = os.path.normpath(file)
+        file = self.filepath()
         self.writefile(file)
         self.flush()
             

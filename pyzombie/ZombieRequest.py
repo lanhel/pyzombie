@@ -47,12 +47,7 @@ DISPATCH_TABLE = [
         HandlerExecSet.dispatch(),
         HandlerExecAdd.dispatch(),
         HandlerExec.dispatch(),
-        
-        Handler.initdispatch(#"Start",
-            r"""^/(?P<execname>\w+)/start$""",
-            "GET,OPTIONS,TRACE",
-            "/help/RESTful"),
-        
+        HandlerExecStart.dispatch(),
         HandlerInstanceSet.dispatch(),
         
         Handler.initdispatch(#"Instance",

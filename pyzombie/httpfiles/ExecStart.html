@@ -1,21 +1,40 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-    <title>pyzombie Start Executable Instance</title>
+    <title>pyzombie Start {0}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta http-equiv='copyright' content='Lance Finn Helsten'/>
     <link rel="Contents" href="add"/>
     <link rel="stylesheet" href="/reference.css" type="text/css" media="screen"/>
 </head>
 <body>
-    <h1>Start Executable Instance</h1>
-    <form id="startexec" method="post" action"/">
+    <h1>pyzombie</h1>
+    <h2>Start {0}</h2>
+    <form id="startexec" method="post" action="" enctype="multipart/form-data">
     
-        <label for="exec">Executable:</label>
-        <input id="exec" type="text" name="exec" value="" size="80"/><br/>
+        <h3>Environment</h3>
+        <h4>Notes</h4>
+            <ul>
+                <li>Each environment variable should occupy a single line
+                    and have the form <code>varkey = varvalue</code>.</li>
+                <li>Whitespace before and after the key and value shall
+                    be stripped away.</li>
+                <li>No variable expansion will occur on the values in
+                    this form.</li>
+                <li>The initial text is the current environment that pyzombie
+                    server is using.<p>
+            </ul>
+        <textarea name="environ" rows="10" cols="80">{1}</textarea>
+        <br/>
         
-        <label for="argv">Arguments:</label>
-        <input id="argv" type="text" name="argv" value="" size=80"/><br/>
+        <h3>Arguments</h3>
+        <h4>Notes</h4>
+            <ul>
+                <li>Arguments may be on a single line or multiple lines.</li>
+                <li>All whitespace will be colapsed into a single space.</li>
+            </ul>
+        <textarea name="arguments" rows="2" cols="80">{2}</textarea>
+        <br/>
         
         <input id="start" name="start" type="submit" value="Start"/>
     </form>
