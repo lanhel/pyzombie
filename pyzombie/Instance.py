@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#$Id: setup.py 902 2009-10-16 16:38:28Z lance $
 #-------------------------------------------------------------------------------
 """Executable instance."""
 __author__ = ('Lance Finn Helsten',)

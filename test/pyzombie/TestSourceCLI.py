@@ -1,6 +1,5 @@
 #!/usr/bin/env /usr/local/bin/python3.1
 # -*- coding: UTF-8 -*-
-#$Id: setup.py 902 2009-10-16 16:38:28Z lance $
 #-------------------------------------------------------------------------------
 """Source to be uploaded to a server that will test arguments, envionment,
 stdin, stdout, and stderr for proper behavior."""

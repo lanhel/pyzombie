@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#$Id: setup.py 902 2009-10-16 16:38:28Z lance $
 #-------------------------------------------------------------------------------
 """pyzombie HTTP RESTful server handler returning the representation of an
 executable."""

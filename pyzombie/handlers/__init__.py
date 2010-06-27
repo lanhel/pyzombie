@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#$Id: __init__.py 5506 2010-03-16 21:48:56Z lhelsten $
 """
 """
 __version__ = """0.0 Copyright (C) 2009 Lance Finn Helsten"""
