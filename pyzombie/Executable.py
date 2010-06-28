@@ -107,7 +107,10 @@ class Executable:
                 mediatype = "application/octet-stream"
             self.__bin = self.__bin + mimetypes.guess_extension(mediatype)
         self.__mediatype = mimetypes.guess_type(self.__bin)
-        self.instances = set()
+        self.instances = {}
+    
+    def __str__(self):
+        return "<pyzombie.Executable {0}>".format(self.name)
 
     def readimage(self, fp):
         """Read te image from the persistant store into the file object."""
@@ -132,7 +135,7 @@ class Executable:
     
     def delete(self):
         """Terminate all instances then remove the executable."""
-        for i in set(self.instances):
+        for i in set(self.instances.values()):
             i.delete()
         shutil.rmtree(self.dirpath, True)
             

@@ -132,7 +132,7 @@ class Instance:
         name = config.get("pyzombie_filesystem", "instance")
         name = "{0}_{1}".format(name, datetime.utcnow().strftime("%Y%jT%H%M%SZ"))
         return name
-    
+        
     def __init__(self, executable, name, environ={}, arguments=[]):
         """
         Parameters
@@ -151,7 +151,7 @@ class Instance:
             named instance already exists then this is ignored.
         """
         self.__executable = executable
-        self.executable.instances.add(self)
+        self.executable.instances[name] = self
         self.__name = name
         self.__statepath = os.path.join(self.datadir, 'state.json')
         self.__environ = environ
@@ -189,9 +189,23 @@ class Instance:
                     "Unable to find executable for instance {0}/{1}.".format(self.executable.name, self.name))
             self.__save()
     
+    def __str__(self):
+        return "<pyzombie.Instance {0}>".format(self.name)
+    
+    def __repr__(self):
+        return "<pyzombie.Instance {0}>".format(self.name)
+    
+    def representation_json(self, fp):
+        """Create a JSON representation of the instance."""
+        pass
+    
+    def representation_yaml(self, fp):
+        """Create a YAML representation of the instance."""
+        pass
+    
     def delete(self):
         """Terminate the instance and release resources."""
-        self.executable.instances.remove(self)
+        del self.executable.instances[self.name]
         if self.process is not None and self.process.returncode is None:
             self.process.kill()
             self.process.wait()

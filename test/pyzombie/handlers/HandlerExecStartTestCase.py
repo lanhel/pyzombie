@@ -54,7 +54,7 @@ class HandlerExecStartGetTest(unittest.TestCase):
 class HandlerExecStartPostTest(unittest.TestCase):    
     
     def setUp(self):
-        self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
+        self.ex = Executable.getcached(self.__class__.__name__, mediatype="text/x-python")
         self.ex.writeimage(open(TestSourceCLI.__file__, "r"))
         self.boundary = """NoBodyExpectsTheSpanishInquisition"""
         environ = TestSourceCLI.ENVIRON

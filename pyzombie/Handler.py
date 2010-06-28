@@ -114,6 +114,58 @@ class Handler:
         if not hasattr(self, "_Handler__executable"):
             self.initexecutable()
         return self.__executable
+            
+    @property
+    def accept(self):
+        """Return an ordered set of media types that will be accepted."""
+        if not hasattr(self, "acceptset"):
+            astr = self.req.headers["Accept"]
+            if astr is None:
+                astr = "text/html"
+            self.acceptset = self.__parseq(astr)
+            self.acceptset.append(None)
+        return self.acceptset
+    
+    @property
+    def acceptlanguage(self):
+        """Return an ordered set of languages that will be accepted."""
+        if not hasattr(self, "acceptlangset"):
+            astr = self.req.headers["Accept-Language"]
+            if astr is None:
+                astr = "en"
+            self.acceptlangset = self.__parseq(astr)
+            self.acceptlangset.append(None)
+        return self.acceptlangset
+    
+    @property
+    def acceptencoding(self):
+        """Return an ordered set of langauges that will be accepted."""
+        if not hasattr(self, "acceptencset"):
+            astr = self.req.headers["Accept-Encoding"]
+            if astr is None:
+                astr = ""
+            self.acceptencset = self.__parseq(astr)
+            self.acceptencset.append(None)
+        return self.acceptencset
+    
+    def __parseq(self, astr):
+        qre = re.compile(r"([a-zA-Z*]+/[a-zA-Z*]+)(\s*;\s*q=(\d+(\.\d+))?)?")
+        astr = astr.split(",")
+        aset = ["DUMMY"]
+        weight = [0.0]
+        for a in astr:
+            q = 1.0
+            m = qre.match(a.strip())
+            if m:
+                a = m.group(1)
+                if m.group(3):
+                    q = float(m.group(3))
+            for i, w in enumerate(weight):
+                if q > w:
+                    aset.insert(i, a)
+                    weight.insert(i, q)
+                    break
+        return aset[:-1]
     
     def initexecutable(self, mediatype=None):
         """This will initialize the executable property with a given media
@@ -144,50 +196,6 @@ class Handler:
                 self.req.server.server_name,
                 self.req.server.server_port,
                 path)
-            
-    def accept(self):
-        """Return an ordered set of media types that will be accepted."""
-        if not hasattr(self, "acceptset"):
-            astr = self.req.headers["Accept"]
-            if astr is None:
-                astr = "text/html"
-            self.acceptset = self.__parseq(astr)
-        return self.acceptset
-    
-    def acceptlanguage(self):
-        """Return an ordered set of languages that will be accepted."""
-        if not hasattr(self, "acceptlangset"):
-            astr = self.req.headers["Accept-Language"]
-            if astr is None:
-                astr = "en"
-            self.acceptlangset = self.__parseq(astr)
-        return self.acceptlangset
-    
-    def acceptencoding(self):
-        """Return an ordered set of langauges that will be accepted."""
-        if not hasattr(self, "acceptencset"):
-            astr = self.req.headers["Accept-Encoding"]
-            if astr is None:
-                astr = ""
-            self.acceptencset = self.__parseq(astr)
-        return self.acceptencset
-    
-    def __parseq(self, astr):
-        astr = astr.split(",")
-        aset = ["DUMMY"]
-        weight = [0.0]
-        for a in astr:
-            q = 1.0
-            if ";q=" in a:
-                a, q = a.split(";")
-                q = float(q.replace("q=", ""))
-            
-            for i, w in enumerate(weight):
-                if q > w:
-                    aset.insert(i - 1, a)
-                    weight.insert(i - 1, w)
-                    break
-        return aset[:-1]
     
     def rfile_safe(self):
         return HttpServerFP(self.req)
@@ -205,7 +213,7 @@ class Handler:
     def readline(self):
         """Read a single line from the input stream in decoded format."""
         pass
-                    
+        
     def writeline(self, line):
         """Write a single line of text to the output stream."""
         self.lines.append(line)

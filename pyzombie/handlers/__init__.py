@@ -24,6 +24,7 @@ from .HandlerExecAdd import *
 from .HandlerExec import *
 from .HandlerExecStart import *
 from .HandlerInstanceSet import *
+from .HandlerInstance import *
 from .HandlerLeftovers import *
 
 

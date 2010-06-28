@@ -38,7 +38,7 @@ IMAGE = """HandlerExecTestCase Test Image"""
 
 class HandlerExecGetTest(unittest.TestCase):
     def setUp(self):
-        self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
+        self.ex = Executable.getcached(self.__class__.__name__, mediatype="text/x-python")
         self.ex.writeimage(io.StringIO(IMAGE))
 
     def tearDown(self):
@@ -82,7 +82,6 @@ class HandlerExecPutTest(unittest.TestCase):
         self.assertEqual(resp.protocol, "HTTP/1.1")
         self.assertEqual(resp.code, str(http.client.OK))        
         self.assertEqual(open(self.ex.binpath, 'rb').read(), self.DATA)
-        
     
     def testInvalidMediaType(self):
         req = MockRequest()

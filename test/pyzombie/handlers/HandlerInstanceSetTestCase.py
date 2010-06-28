@@ -57,15 +57,13 @@ class HandlerInstanceSetPostJson(unittest.TestCase):
         self.loc_re = r"http://MockServer:8008/" + \
             "(" + self.__class__.__name__ + ")" + \
             "/instances/(run_\d{7}T\d{6}Z?)"
-
-        self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
+        self.ex = Executable.getcached(self.__class__.__name__, mediatype="text/x-python")
         self.ex.writeimage(open(TestSourceCLI.__file__, "r"))
     
     def tearDown(self):
         self.ex.delete()
 
     def runTest(self):
-
         data = TestSourceCLI.restful_json()
         req = MockRequest()
         req.rfile.write(data)
@@ -83,7 +81,7 @@ class HandlerInstanceSetPostJson(unittest.TestCase):
         self.assertEqual(int(resp.header["Content-Length"]), 0)
         
         match = re.match(self.loc_re, resp.header["Location"])        
-        instance = list(hndlr.executable.instances)[0]
+        instance = list(hndlr.executable.instances.values())[0]
         self.assertIsNotNone(instance.process)
         self.assertIsNone(instance.process.returncode)
         instance.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))

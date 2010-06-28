@@ -29,59 +29,57 @@ import re
 import unittest
 import http.client
 from pyzombie.Executable import Executable
-from pyzombie.handlers import HandlerExecAdd
+from pyzombie.Instance import Instance
+from pyzombie.handlers import HandlerInstance
 from MockRequest import MockRequest
 from HTTPResponse import HTTPResponse
+import TestSourceCLI
 
 
-class HandlerExecAddGetTest(unittest.TestCase):
+
+class HandlerInstanceGetJsonTest(unittest.TestCase):
+    def setUp(self):
+        self.ex = Executable.getcached(__name__, mediatype="text/x-python")
+        self.ex.writeimage(open(TestSourceCLI.__file__, "r"))
+        self.inst = Instance(self.ex, self.__class__.__name__,
+        	environ=TestSourceCLI.ENVIRON, arguments=TestSourceCLI.ARGV)
+        self.inst.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
+
+    def tearDown(self):
+        self.ex.delete()
+
     def runTest(self):
         req = MockRequest()
-        hndlr = HandlerExecAdd(req, {'execname':self.__class__.__name__})
+        req.headers["Accept"] = "spam/eggs; q=1.0, application/json; q=0.5, text/html; q=1.0, text/plain"
+        hndlr = HandlerInstance(req, {'execname':__name__, 'instname':self.__class__.__name__})
+        self.assertEqual(hndlr.executable, self.ex)
         hndlr.get()
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
         self.assertEqual(resp.code, str(http.client.OK))
-        self.assertEqual(resp.header["Content-Type"], "text/html;UTF-8")
+        self.assertEqual(resp.header["Content-Type"], "application/json")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
 
 
-class HandlerExecAddPostTest(unittest.TestCase):    
+class HandlerInstanceDeleteTest(unittest.TestCase):
+    LOC_RE = r"""http://MockServer:8008/(zombie_\d{7}T\d{6}Z)"""
     
     def setUp(self):
-        self.image = """{0} Test Image""".format(self.__class__.__name__)
-        self.boundary = """NoBodyExpectsTheSpanishInquisition"""
-        self.form = """
---{0}
-Content-Disposition: form-data; name="execfile"; filename="{1}"
-Content-Type: text/x-python
-
-{2}
---{0}
-Content-Disposition: form-data; name="add"
-
-Add
---{0}--
-
-
-""".format(self.boundary, self.__class__.__name__, self.image)
-        self.form = self.form.replace(os.linesep, '\r\n')
-        self.form = self.form.encode("UTF-8")
+        self.ex = Executable.getcached(__name__, mediatype="text/x-python")
+        self.ex.writeimage(open(TestSourceCLI.__file__, "r"))
+        self.inst = Instance(self.ex, self.__class__.__name__,
+        	environ=TestSourceCLI.ENVIRON, arguments=TestSourceCLI.ARGV)
+        self.inst.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
 
     def runTest(self):
         req = MockRequest()
-        req.readbuf = io.BytesIO(self.form)
-        req.headers["Content-Type"] = "multipart/form-data; boundary={0}".format(self.boundary)
-        req.headers["Content-Length"] = str(len(self.form))
-        hndlr = HandlerExecAdd(req, {})
-        hndlr.post()
+        hndlr = HandlerInstance(req, {'execname':__name__, 'instname':self.__class__.__name__})
+        hndlr.delete()
         
         resp = HTTPResponse(req.wfile.getvalue())        
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, str(http.client.CREATED))
-        self.ex = Executable.getcached(hndlr.executable.name)
-        self.assertEqual(str(open(self.ex.binpath, 'rb').read(), "UTF-8"), self.image)
-        
-    
+        self.assertEqual(resp.code, str(http.client.OK))
+        self.assertFalse(os.path.isdir(self.inst.datadir))
+
