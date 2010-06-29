@@ -26,10 +26,12 @@ import sys
 import os
 import io
 import re
+import json
 import unittest
+from time import sleep
 import http.client
 from pyzombie.Executable import Executable
-from pyzombie.Instance import Instance
+from pyzombie.Instance import Instance, DELTA_T
 from pyzombie.handlers import HandlerInstance
 from MockRequest import MockRequest
 from HTTPResponse import HTTPResponse
@@ -45,14 +47,16 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
         	environ=TestSourceCLI.ENVIRON, arguments=TestSourceCLI.ARGV)
         self.inst.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
 
-    def tearDown(self):
-        self.ex.delete()
-
-    def runTest(self):
+    #def tearDown(self):
+    #    self.ex.delete()
+    
+    def makeRequest(self):
         req = MockRequest()
         req.headers["Accept"] = "spam/eggs; q=1.0, application/json; q=0.5, text/html; q=1.0, text/plain"
+
         hndlr = HandlerInstance(req, {'execname':__name__, 'instname':self.__class__.__name__})
-        self.assertEqual(hndlr.executable, self.ex)
+        self.assertEqual(hndlr.executable, self.ex)        
+        urlself = hndlr.serverurl(path=__name__ + '/' + self.__class__.__name__)
         hndlr.get()
 
         resp = HTTPResponse(req.wfile.getvalue())
@@ -61,6 +65,47 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
         self.assertEqual(resp.header["Content-Type"], "application/json")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
+
+        state = json.load(io.StringIO(str(resp.body, "UTF-8")))
+        self.assertEqual(state['version'], __version__)
+        self.assertEqual(state['self'], urlself)
+        self.assertEqual(state['stdin'], urlself + "/stdin")
+        self.assertEqual(state['stdout'], urlself + "/stdout")
+        self.assertEqual(state['stderr'], urlself + "/stderr")
+        self.assertEquals(state['returncode'], self.inst.returncode)
+        self.assertEquals(state['start'], self.inst.start.strftime('%Y-%m-%dT%H:%M:%SZ'))
+        self.assertEquals(state['remove'], self.inst.remove.strftime('%Y-%m-%dT%H:%M:%SZ'))
+        
+        return req, hndlr, state
+    
+    def runTest(self):        
+        ###
+        ### Check while process is running
+        ###
+        req, hndlr, state = self.makeRequest()
+        self.assertIsNone(state['end'])
+        environ = state['environ']
+        argv = state['arguments']
+        
+        ###
+        ### Let the process stop
+        ###        
+        self.inst.stdin.close()
+        while self.inst.returncode is None:
+            sleep(DELTA_T)
+        self.inst.stdout.close()
+        self.inst.stderr.close()
+
+        
+        ###
+        ### Recheck the response for a completed process
+        ###
+        req, hndlr, state = self.makeRequest()
+        self.assertEquals(state['end'], self.inst.end.strftime('%Y-%m-%dT%H:%M:%SZ'))
+        TestSourceCLI.validateResults(self, self.inst.name, state['returncode'],
+                self.inst.stdout, self.inst.stderr)
+        self.assertEquals(state['environ'], environ)
+        self.assertEquals(state['arguments'], argv)
 
 
 class HandlerInstanceDeleteTest(unittest.TestCase):

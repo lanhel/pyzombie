@@ -60,7 +60,10 @@ class ActiveTest(Thread):
                 self.__instances -= set(stopped)
                 for i in stopped:
                     i._Instance__returncode = i.process.returncode
+                    i._Instance__end = datetime.utcnow()
                     i._Instance__save()
+                    i.stdout.close()
+                    i.stderr.close()
             except Exception as err:
                 logging.getLogger("zombie").warning(err)
         logging.getLogger("zombie").info("End %s", self.name)
@@ -195,13 +198,30 @@ class Instance:
     def __repr__(self):
         return "<pyzombie.Instance {0}>".format(self.name)
     
-    def representation_json(self, fp):
-        """Create a JSON representation of the instance."""
-        pass
+    def representation_json(self, fp, urlprefix):
+        """Create a JSON representation of the instance.
+        
+        Parameters
+        ----------
+        fp
+            Pointer to file type object to write the JSON representation.
+        urlprefix
+            The URL scheme, host, port, etc. prefix for all URLs in the representation.
+        """
+        state = self.__marshall(urlprefix)
+        json.dump(state, fp, sort_keys=True, indent=4)
     
-    def representation_yaml(self, fp):
-        """Create a YAML representation of the instance."""
-        pass
+    def representation_yaml(self, fp, urlprefix):
+        """Create a YAML representation of the instance.
+        
+        Parameters
+        ----------
+        fp
+            Pointer to file type object to write the JSON representation.
+        urlprefix
+            The URL scheme, host, port, etc. prefix for all URLs in the representation.
+        """
+        state = self.__marshall(urlprefix)
     
     def delete(self):
         """Terminate the instance and release resources."""
@@ -302,33 +322,41 @@ class Instance:
         return self.__stderr
 
     DATETIME_FMT = '%Y-%m-%dT%H:%M:%SZ'
-
-    def __save(self):
-        """This will save the state of this instance to the instance's data
-        directory."""
+    
+    def __marshall(self, urlprefix):
+        """This will marshall the state of this instance into primative data
+        types (e.g. dict, list, and string) that can be used in XML, JSON,
+        or YAML marshalling."""        
         state = {}
         state['version'] = __version__
-        state['name'] = self.name
-        state['datadir'] = self.datadir
-        state['workdir'] = self.workdir.replace(self.datadir, '${datadir}')
-        state['tmpdir'] = self.tmpdir.replace(self.datadir, '${datadir}')
-        state['stdout'] = self.stdout_path.replace(self.datadir, '${datadir}')
-        state['stderr'] = self.stderr_path.replace(self.datadir, '${datadir}')
+        state['name'] = "{0}/{1}".format(self.executable.name, self.name)
+        state['self'] = "{0}{1}".format(urlprefix, state['name'])
+        state['stdin'] = "{0}/{1}".format(state['self'], "stdin")
+        state['stdout'] = "{0}/{1}".format(state['self'], "stdout")
+        state['stderr'] = "{0}/{1}".format(state['self'], "stderr")
         state['environ'] = self.environ
         state['arguments'] = self.arguments
         state['remove'] = self.remove.strftime(self.DATETIME_FMT)
         state['start'] = self.start.strftime(self.DATETIME_FMT)
-        if self.__end is not None:
+        if self.end:
             state['end'] = self.end.strftime(self.DATETIME_FMT)
         else:
-            state['end'] = datetime.utcnow().strftime(self.DATETIME_FMT)
-        if self.returncode is None:
-            state['returncode'] = errno.ECHILD
-        else:
-            state['returncode'] = self.returncode
+            state['end'] = None
+        state['returncode'] = self.returncode
+        return state
+    
+    def __save(self):
+        """This will save the state of this instance to the instance's data
+        directory."""
+        state = self.__marshall("file:/{0}/".format(self.executable.datadir))
+        state['workdir'] = "file:" + self.workdir
+        state['tmpdir'] = "file:" + self.tmpdir
+        state['stdout'] = state['stdout'] + '.txt'
+        state['stderr'] = state['stderr'] + '.txt'
                 
         statefile = open(self.__statepath, 'wt')
         json.dump(state, statefile, sort_keys=True, indent=4)
+        statefile.flush()
         statefile.close()
     
     def __load(self):
@@ -341,8 +369,16 @@ class Instance:
             
             self.__remove = datetime.strptime(state['remove'], self.DATETIME_FMT)
             self.__start = datetime.strptime(state['start'], self.DATETIME_FMT)
-            self.__end = datetime.strptime(state['end'], self.DATETIME_FMT)
-            self.__returncode = int(state['returncode'])
+            
+            if state['end']:
+                self.__end = datetime.strptime(state['end'], self.DATETIME_FMT)
+            else:
+                self.__end = datetime.utcnow().strftime(self.DATETIME_FMT)
+            
+            if state['returncode']:
+                self.__returncode = int(state['returncode'])
+            else:
+                self.__returncode = None
         else:
             self.__remove = datetime.utcnow() + timedelta(days=7)
             self.__start = datetime.utcnow()

@@ -38,6 +38,8 @@ def validateResults(utest, name, returncode, stdout, stderr):
     
     utest
         The unit test case that will handle asserts.
+    returncode
+        The return code produced by this file.
     stdout
         The file that contains the stdout produced by executing this file.
     stderr

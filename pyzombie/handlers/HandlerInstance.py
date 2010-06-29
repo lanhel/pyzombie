@@ -58,10 +58,10 @@ class HandlerInstance(Handler):
             buf = io.StringIO()
             for mediatype in self.accept:
                 if mediatype == "application/json":
-                    inst.representation_json(buf)
+                    inst.representation_json(buf, self.serverurl(path=""))
                     break
                 elif mediatype == "application/yaml":
-                    inst.representation_yaml(buf)
+                    inst.representation_yaml(buf, self.serverurl(path=""))
                     break
             if mediatype:
                 self["Content-Type"] = mediatype
