@@ -55,16 +55,8 @@ DISPATCH_TABLE = [
             "GET,PUT,OPTIONS,TRACE",
             "/help/RESTful"),
         
-        Handler.initdispatch(#"stdout",
-            r"""^/(?P<execname>\w+)/instances/(?P<instname>\w+)/stdout$""",
-            "GET,OPTIONS,TRACE",
-            "/help/RESTful"),
-        
-        Handler.initdispatch(#"stderr",
-            r"""^/(?P<execname>\w+)/instances/(?P<instname>\w+)/stderr$""",
-            "GET,OPTIONS,TRACE",
-            "/help/RESTful"),
-        
+        HandlerInstanceStdout.dispatch(),
+        HandlerInstanceStderr.dispatch(),        
         HandlerLeftovers.dispatch(),
     ]
 

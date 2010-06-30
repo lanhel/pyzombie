@@ -36,7 +36,7 @@ class HandlerLeftoversGetTest(unittest.TestCase):
         hndlr = HandlerLeftovers(req, {"leftover":"ExecAdd.html"})
         hndlr.get()
         resp = HTTPResponse(req.wfile.getvalue())
-        
+                
         self.assertEqual("HTTP/1.1", resp.protocol)
         self.assertEqual("200", resp.code)
         self.assertEqual("OK", resp.message)

@@ -232,31 +232,77 @@ class Handler:
         This is meant for static files. Dynamic files should use writeline
         or writelines to operate.
         
-        Parameters:
+        Parameters
+        ----------
         path
             The normalized path to the file.
         """
         if os.path.isfile(path):
-            data = open(path, "rb").read()
-            type, enc = mimetypes.guess_type(path)
-            self.req.send_response(http.client.OK)
-            self.req.send_header("Cache-Control", "public max-age={0}".format(self.req.server.maxagestatic))
-            self.req.send_header("Last-Modified", self.req.date_time_string)
+            mediatype, enc = mimetypes.guess_type(path)
+            self.writefp(open(path, "rb"), mediatype=mediatype, enc=enc)
+        else:
+            self.error(http.client.NOT_FOUND)
+    
+    def writefp(self, fp, mediatype="text/plain", enc=None, chunked=None):
+        """Read from the given file object and write the data to the output
+        stream. If this is chunked then this will not return until the input
+        file object is closed.
+        
+        Parameters
+        ----------
+        fp
+            The file type object to read from.
+        chunked
+            If not ``None`` then the data should be sent in a chunked manner,
+            and the value should be a function that returns a boolean value
+            to indicate all data has been sent. The default is no chunked.
+        """
+        self.req.send_response(http.client.OK)
+        self.req.send_header("Cache-Control", "public max-age={0}".format(self.req.server.maxagestatic))
+        self.req.send_header("Last-Modified", self.req.date_time_string)
+        if mediatype == None:
+            self.req.send_header("Content-Type", "application/octet-stream")
+        else:
+            if mediatype in ["text/plain", "text/html"]:
+                mediatype = "{0};UTF-8".format(mediatype)
+            self.req.send_header("Content-Type", mediatype)
+        if enc != None:
+            self.req.send_header("Content-Encoding", enc)
+        
+        if chunked is not None:
+            self.__etag_init()
+            self.content = "Chunked"
+            self.req.send_header("Transfer-Encoding", "chunked")
+            self.req.end_headers()
+            length = 0
+            done = False
+            while not done:
+                data = fp.read()
+                while not data and not done:
+                    data = fp.read()
+                    done = chunked()
+                if data:
+                    datalen = len(data)
+                    length = length + datalen
+                    self.__etag_feed(data)
+                    self.req.wfile.write("{0:x}".format(datalen).encode("UTF-8"))
+                    self.req.wfile.write(os.linesep.encode("UTF-8"))
+                    self.req.wfile.write(data)
+                    self.req.wfile.write(os.linesep.encode("UTF-8"))
+            self.req.wfile.write(b"0")
+            self.req.wfile.write(os.linesep.encode("UTF-8"))
+            self.req.send_header("Cache-Control", "public max-age={0}".format(self.req.server.maxagedynamic))
+            self.req.send_header("ETag", self.__etag_value())
+            self.req.wfile.write(os.linesep.encode("UTF-8"))
+            self.content = FLUSHED
+        else:
+            data = fp.read()
             self.req.send_header("ETag", self.etag(data))
-            if type == None:
-                self.req.send_header("Content-Type", "application/octet-stream")
-            else:
-                if type in ["text/plain", "text/html"]:
-                    type = "{0};UTF-8".format(type)
-                self.req.send_header("Content-Type", type)
-            if enc != None:
-                self.req.send_header("Content-Encoding", enc)
             self.req.send_header("Content-Length", len(data))
             self.req.end_headers()
             self.req.wfile.write(data)
             self.content = FLUSHED
-        else:
-            self.error(http.client.NOT_FOUND)
+
     
     def error(self, code, message=None):
         self.req.send_error(code, message=message)
@@ -299,9 +345,18 @@ class Handler:
     def etag(self, data):
         """Build an ETag representation for the data associated with the given
         name."""
-        m = hashlib.md5()
-        m.update(data)
-        return m.hexdigest()
+        self.__etag_init()
+        self.__etag_feed(data)
+        return self.__etag_value()
+    
+    def __etag_init(self):
+        self.__etag = hashlib.md5()
+    
+    def __etag_feed(self, data):
+        self.__etag.update(data)
+    
+    def __etag_value(self):
+        return self.__etag.hexdigest()
     
     def __getitem__(self, key):
         return self.headers[key]
