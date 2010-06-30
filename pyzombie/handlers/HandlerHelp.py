@@ -40,7 +40,6 @@ INDEX_HTML = """<!DOCTYPE html>
 <head>
     <title>pyzombie Help Contents</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <meta http-equiv='copyright' content='Lance Finn Helsten'/>
     <link rel="Contents" href="/add"/>
     <link rel="stylesheet" href="/help/help.css" type="text/css" media="screen"/>
 </head>

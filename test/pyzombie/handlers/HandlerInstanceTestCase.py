@@ -52,11 +52,11 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
     
     def makeRequest(self):
         req = MockRequest()
-        req.headers["Accept"] = "spam/eggs; q=1.0, application/json; q=0.5, text/html; q=1.0, text/plain"
+        req.headers["Accept"] = "spam/eggs; q=1.0, application/json; q=0.5, text/html;q=0.1, text/plain"
 
         hndlr = HandlerInstance(req, {'execname':__name__, 'instname':self.__class__.__name__})
         self.assertEqual(hndlr.executable, self.ex)        
-        urlself = hndlr.serverurl(path=__name__ + '/' + self.__class__.__name__)
+        urlself = hndlr.serverurl(path=__name__ + '/instances/' + self.__class__.__name__)
         hndlr.get()
 
         resp = HTTPResponse(req.wfile.getvalue())
@@ -95,7 +95,6 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
             sleep(DELTA_T)
         self.inst.stdout.close()
         self.inst.stderr.close()
-
         
         ###
         ### Recheck the response for a completed process

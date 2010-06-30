@@ -31,12 +31,14 @@ import io
 import re
 import string
 from datetime import datetime
+import json
 import logging
 import cgi
 import mimetypes
 import http.client
 import http.server
 from ..Handler import Handler
+from ..Instance import Instance
 
 
 class HandlerInstance(Handler):    
@@ -53,17 +55,21 @@ class HandlerInstance(Handler):
     
     def get(self):
         name = self.urlargs["instname"]
-        if name in self.executable.instances:
-            inst = self.executable.instances[name]
+        inst = Instance.getcached(self.executable, name)
+        if inst:
             buf = io.StringIO()
             for mediatype in self.accept:
-                if mediatype == "application/json":
-                    inst.representation_json(buf, self.serverurl(path=""))
+                if mediatype == "text/html":
+                    reprfunc = self.representation_html
+                    break
+                elif mediatype == "application/json":
+                    reprfunc = self.representation_json
                     break
                 elif mediatype == "application/yaml":
-                    inst.representation_yaml(buf, self.serverurl(path=""))
+                    reprfunc = self.representation_yaml
                     break
             if mediatype:
+                reprfunc(inst, buf)
                 self["Content-Type"] = mediatype
                 self.writelines(buf.getvalue())
                 self.status = http.client.OK
@@ -84,4 +90,65 @@ class HandlerInstance(Handler):
         else:
             self.error(http.client.NOT_FOUND)
         
+    
+    def representation_html(self, inst, fp):
+        """Create an HTML representation of the instance.
+        
+        Parameters
+        ----------
+        fp
+            Pointer to file type object to write the HTML representation.
+        """
+        inststate = inst.state(self.serverurl(path=""), urlpath="instances")
+        print(inststate)
+        html = """<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <title>pyzombie: {name}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="Contents" href="/"/>
+</head>
+<body>
+    <h1>pyzombie</h1>
+    <h2><a href="{self}">{name}</a></h2>
+    <ul>
+        <li>Result code: {returncode}</li>
+        <li>Started: {start}</li>
+        <li>Timeout: {timeout}</li>
+        <li>Completed: {end}</li>
+        <li>Remove: {remove}</li>
+        <li><a href="{stdin}">stdin</a></li>
+        <li><a href="{stdout}">stdout</a></li>
+        <li><a href="{stderr}">stderr</a></li>
+    </ul>
+</body>
+</html>
+""".format(**inststate)
+        fp.write(html)
+    
+    def representation_json(self, inst, fp):
+        """Create a JSON representation of the instance.
+        
+        Parameters
+        ----------
+        fp
+            Pointer to file type object to write the JSON representation.
+        """
+        state = inst.state(self.serverurl(path=""), urlpath="instances")
+        json.dump(state, fp, sort_keys=True, indent=4)
+    
+    def representation_yaml(self, inst, fp):
+        """Create a YAML representation of the instance.
+        
+        Parameters
+        ----------
+        fp
+            Pointer to file type object to write the JSON representation.
+        urlprefix
+            The URL scheme, host, port, etc. prefix for all URLs in the representation.
+        urlpath
+            The additional path information between the executable name and the
+            instance name.
+        """
+        state = inst.state(self.serverurl(path=""), urlpath="instances")
 

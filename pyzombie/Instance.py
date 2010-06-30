@@ -128,13 +128,32 @@ class Instance:
         random access read only file.
     """
     
-    
     @classmethod
     def createname(cls):
         """Create a unique RESTful name for a new executing instance."""
         name = config.get("pyzombie_filesystem", "instance")
         name = "{0}_{1}".format(name, datetime.utcnow().strftime("%Y%jT%H%M%SZ"))
         return name
+    
+    @classmethod
+    def getcached(cls, executable, name):
+        """Get a cached instance from the executable if it exists.
+        
+        Parameters
+        ----------
+        executable
+            The executable factory that creates this instance.
+        name
+            The name of this instance.
+        """
+        inst = None
+        instpath = os.path.join(executable.dirpath, name, 'state.json')
+        if os.path.isfile(instpath):
+            if name in executable.instances:
+                inst = executable.instances[name]
+            else:
+                inst = Instance(executable, name)
+        return inst
         
     def __init__(self, executable, name, environ={}, arguments=[]):
         """
@@ -198,30 +217,28 @@ class Instance:
     def __repr__(self):
         return "<pyzombie.Instance {0}>".format(self.name)
     
-    def representation_json(self, fp, urlprefix):
-        """Create a JSON representation of the instance.
-        
-        Parameters
-        ----------
-        fp
-            Pointer to file type object to write the JSON representation.
-        urlprefix
-            The URL scheme, host, port, etc. prefix for all URLs in the representation.
-        """
-        state = self.__marshall(urlprefix)
-        json.dump(state, fp, sort_keys=True, indent=4)
-    
-    def representation_yaml(self, fp, urlprefix):
-        """Create a YAML representation of the instance.
-        
-        Parameters
-        ----------
-        fp
-            Pointer to file type object to write the JSON representation.
-        urlprefix
-            The URL scheme, host, port, etc. prefix for all URLs in the representation.
-        """
-        state = self.__marshall(urlprefix)
+    def state(self, urlprefix, urlpath=""):
+        """This will marshall the state of this instance into primative data
+        types (e.g. dict, list, and string) that can be used in XML, JSON,
+        or YAML marshalling."""        
+        state = {}
+        state['version'] = __version__
+        state['name'] = "{0}/{1}/{2}".format(self.executable.name, urlpath, self.name)
+        state['self'] = "{0}/{1}".format(urlprefix.rstrip('/'), state['name'])
+        state['stdin'] = "{0}/{1}".format(state['self'].rstrip('/'), "stdin")
+        state['stdout'] = "{0}/{1}".format(state['self'].rstrip('/'), "stdout")
+        state['stderr'] = "{0}/{1}".format(state['self'].rstrip('/'), "stderr")
+        state['environ'] = self.environ
+        state['arguments'] = self.arguments
+        state['remove'] = self.remove.strftime(self.DATETIME_FMT)
+        state['timeout'] = self.timeout.strftime(self.DATETIME_FMT)
+        state['start'] = self.start.strftime(self.DATETIME_FMT)
+        if self.end:
+            state['end'] = self.end.strftime(self.DATETIME_FMT)
+        else:
+            state['end'] = None
+        state['returncode'] = self.returncode
+        return state
     
     def delete(self):
         """Terminate the instance and release resources."""
@@ -323,32 +340,10 @@ class Instance:
 
     DATETIME_FMT = '%Y-%m-%dT%H:%M:%SZ'
     
-    def __marshall(self, urlprefix):
-        """This will marshall the state of this instance into primative data
-        types (e.g. dict, list, and string) that can be used in XML, JSON,
-        or YAML marshalling."""        
-        state = {}
-        state['version'] = __version__
-        state['name'] = "{0}/{1}".format(self.executable.name, self.name)
-        state['self'] = "{0}{1}".format(urlprefix, state['name'])
-        state['stdin'] = "{0}/{1}".format(state['self'], "stdin")
-        state['stdout'] = "{0}/{1}".format(state['self'], "stdout")
-        state['stderr'] = "{0}/{1}".format(state['self'], "stderr")
-        state['environ'] = self.environ
-        state['arguments'] = self.arguments
-        state['remove'] = self.remove.strftime(self.DATETIME_FMT)
-        state['start'] = self.start.strftime(self.DATETIME_FMT)
-        if self.end:
-            state['end'] = self.end.strftime(self.DATETIME_FMT)
-        else:
-            state['end'] = None
-        state['returncode'] = self.returncode
-        return state
-    
     def __save(self):
         """This will save the state of this instance to the instance's data
         directory."""
-        state = self.__marshall("file:/{0}/".format(self.executable.datadir))
+        state = self.state("file:/{0}/".format(self.executable.datadir))
         state['workdir'] = "file:" + self.workdir
         state['tmpdir'] = "file:" + self.tmpdir
         state['stdout'] = state['stdout'] + '.txt'
