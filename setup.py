@@ -25,6 +25,7 @@ if sys.version_info < (3, 0):
     raise Exception("pyzombie requires Python 3.0 or higher.")
 import os
 import shutil
+import locale
 import logging
 import subprocess
 import re
@@ -32,6 +33,8 @@ import unittest
 from distutils.core import setup
 from distutils.core import Command
 from distutils.command.build import build as _build
+
+locale.setlocale(locale.LC_ALL, '')
 
 class build(_build):
     """This will overload the normal build command to allow automatic build
@@ -51,10 +54,16 @@ class build(_build):
                 or not os.path.isfile(dst)
                 or os.path.getmtime(src) > os.path.getmtime(dst)):
                     print("translating", src)
-                    args = ["rst2html.py", os.path.abspath(src), os.path.abspath(dst)]
-                    subprocess.call(args)
-    
-        
+                    env = dict(os.environ)
+                    env["PATH"] = os.path.abspath("setup/bin") + os.pathsep + env["PATH"]
+                    env["PYTHONPATH"] = os.path.abspath("setup/lib/python") + os.pathsep + env["PYTHONPATH"]
+                    args = [sys.executable,
+                            os.path.abspath("setup/bin/rst2html.py"),
+                            os.path.abspath(src),
+                            os.path.abspath(dst),
+                            "--traceback"]
+                    subprocess.call(args, env=env)
+
 
 class test(Command):
     description = "Run all unit and integration tests on the system."
