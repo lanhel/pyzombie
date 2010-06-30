@@ -48,13 +48,8 @@ DISPATCH_TABLE = [
         HandlerExec.dispatch(),
         HandlerExecStart.dispatch(),
         HandlerInstanceSet.dispatch(),
-        HandlerInstance.dispatch(),
-                
-        Handler.initdispatch(#"stdin",
-            r"""^/(?P<execname>\w+)/instances/(?P<instname>\w+)/stdin$""",
-            "GET,PUT,OPTIONS,TRACE",
-            "/help/RESTful"),
-        
+        HandlerInstance.dispatch(),        
+        HandlerInstanceStdin.dispatch(),
         HandlerInstanceStdout.dispatch(),
         HandlerInstanceStderr.dispatch(),        
         HandlerLeftovers.dispatch(),

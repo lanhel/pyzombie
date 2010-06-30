@@ -100,7 +100,6 @@ class HandlerInstance(Handler):
             Pointer to file type object to write the HTML representation.
         """
         inststate = inst.state(self.serverurl(path=""), urlpath="instances")
-        print(inststate)
         html = """<!DOCTYPE html>
 <html lang='en'>
 <head>

@@ -25,6 +25,7 @@ from .HandlerExec import *
 from .HandlerExecStart import *
 from .HandlerInstanceSet import *
 from .HandlerInstance import *
+from .HandlerInstanceStdin import *
 from .HandlerInstanceStdout import *
 from .HandlerInstanceStderr import *
 from .HandlerLeftovers import *
