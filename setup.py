@@ -148,24 +148,27 @@ class changeversion(Command):
         if self.newversion < self.oldversion:
             print("New version must be greater than {{0}.{1}.{2}}.".format(self.oldversion))
             sys.exit(errno.EINVAL)
+        self.srcpat = re.compile(r"""__version__\s*=\s*['"](\d{1,2}\.\d{1,2}(\.\d{1,2})?)['"]\s*""", re.MULTILINE)
+        if len(self.newversion) == 2:
+            self.repl = """__version__ = '{0}.{1}'\n""".format(*self.newversion)
+        else:
+            self.repl = """__version__ = '{0}.{1}.{2}'\n""".format(*self.newversion)
 
     def run(self):
-        srcpat = re.compile(r"""__version__\s*=\s*['"](\d{1,2}\.\d{1,2}(\.\d{1,2})?)['"]\s*""", re.MULTILINE)
-        if len(self.newversion) == 2:
-            repl = """__version__ = '{0}.{1}'\n""".format(*self.newversion)
-        else:
-            repl = """__version__ = '{0}.{1}.{2}'\n""".format(*self.newversion)
-        
-        for dirpath, dirnames, filenames in os.walk(os.getcwd()):
+        self.walkdirs('pyzombie')
+        self.walkdirs('test')
+    
+    def walkdirs(self, dir):
+        for dirpath, dirnames, filenames in os.walk(os.path.abspath(dir)):
             filenames = [f for f in filenames if os.path.splitext(f)[1] == '.py']
             for f in filenames:
                 path = os.path.join(dirpath, f)
                 file = open(path, mode='r')
                 contents = file.read()
                 file.close()
-                match = srcpat.search(contents)
+                match = self.srcpat.search(contents)
                 if match and tuple(match.groups()[0].split('.')) == self.oldversion:
-                    contents = srcpat.sub(repl, contents)
+                    contents = self.srcpat.sub(self.repl, contents)
                     file = open(path, mode='w')
                     file.write(contents)
                     file.close()
