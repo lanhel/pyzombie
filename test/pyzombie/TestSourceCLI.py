@@ -55,7 +55,6 @@ def validateResults(utest, name, returncode, stdout, stderr):
     
     utest.assertEquals(STDERR, stderr.read())
     
-    
 def dumpstdout(fp, env, argv, stdin):
     out = {}
     out['name'] = NAME
@@ -63,7 +62,6 @@ def dumpstdout(fp, env, argv, stdin):
     out['argv'] = argv
     out['stdin'] = stdin.readlines()
     json.dump(out, fp)
-
 
 def restful_yaml():
     pass

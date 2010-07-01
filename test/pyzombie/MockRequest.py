@@ -91,10 +91,11 @@ class MockRequest():
     def end_headers(self):
         self.__writeline("")
     
-    def date_time_string(timestamp=None):
+    def date_time_string(self, timestamp=None):
         if timestamp is None:
             timestamp = time.time()
-        return time.strftime(timestamp, "%a, %d %b %Y %H:%M:%S GMT")
+        tm = time.gmtime(timestamp)
+        return time.strftime("%a, %d %b %Y %H:%M:%S GMT", tm)
     
     @property
     def headers(self):

@@ -47,8 +47,8 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
         	environ=TestSourceCLI.ENVIRON, arguments=TestSourceCLI.ARGV)
         self.inst.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
 
-    #def tearDown(self):
-    #    self.ex.delete()
+    def tearDown(self):
+        self.ex.delete()
     
     def makeRequest(self):
         req = MockRequest()

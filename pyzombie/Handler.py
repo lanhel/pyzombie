@@ -49,6 +49,7 @@ from .Executable import Executable
 ### Pay attention to If-Modified-Since
 
 
+CHUNK_SIZE = 256
 FLUSHED = "Flushed"
 
 
@@ -259,7 +260,7 @@ class Handler:
         """
         self.req.send_response(http.client.OK)
         self.req.send_header("Cache-Control", "public max-age={0}".format(self.req.server.maxagestatic))
-        self.req.send_header("Last-Modified", self.req.date_time_string)
+        self.req.send_header("Last-Modified", self.req.date_time_string())
         if mediatype == None:
             self.req.send_header("Content-Type", "application/octet-stream")
         else:
@@ -269,7 +270,7 @@ class Handler:
         if enc != None:
             self.req.send_header("Content-Encoding", enc)
         
-        if chunked is not None:
+        if chunked is not None:            
             self.__etag_init()
             self.content = "Chunked"
             self.req.send_header("Transfer-Encoding", "chunked")
@@ -277,9 +278,9 @@ class Handler:
             length = 0
             done = False
             while not done:
-                data = fp.read()
+                data = fp.read(CHUNK_SIZE)
                 while not data and not done:
-                    data = fp.read()
+                    data = fp.read(CHUNK_SIZE)
                     done = chunked()
                 if data:
                     datalen = len(data)
@@ -287,7 +288,10 @@ class Handler:
                     self.__etag_feed(data)
                     self.req.wfile.write("{0:x}".format(datalen).encode("UTF-8"))
                     self.req.wfile.write(os.linesep.encode("UTF-8"))
-                    self.req.wfile.write(data)
+                    if isinstance(data, str):
+                        self.req.wfile.write(data.encode("UTF-8"))
+                    elif isinstance(data, bytes):
+                        self.req.wfile.write(data)
                     self.req.wfile.write(os.linesep.encode("UTF-8"))
             self.req.wfile.write(b"0")
             self.req.wfile.write(os.linesep.encode("UTF-8"))
@@ -353,7 +357,12 @@ class Handler:
         self.__etag = hashlib.md5()
     
     def __etag_feed(self, data):
-        self.__etag.update(data)
+        if isinstance(data, str):
+            self.__etag.update(data.encode("UTF-8"))
+        elif isinstance(data, bytes):
+            self.__etag.update(data)
+        else:
+            self.__etag.update(str(data).encode("UTF-8"))
     
     def __etag_value(self):
         return self.__etag.hexdigest()

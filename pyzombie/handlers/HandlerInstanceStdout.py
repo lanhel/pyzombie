@@ -49,10 +49,8 @@ class HandlerInstanceStdout(Handler):
         self.get()
     
     def get(self):
-        print("GET", self.__class__.__name__, self.urlargs["instname"])
         name = self.urlargs["instname"]
         inst = Instance.getcached(self.executable, name)
-        print(inst, inst.returncode)
         if inst and inst.returncode is not None:
             self.writefile(inst.stdout_path)
         elif inst and inst.returncode is None:
@@ -61,6 +59,8 @@ class HandlerInstanceStdout(Handler):
             self.error(http.client.NOT_FOUND)
         
     def __instdone(self):
+        name = self.urlargs["instname"]
+        inst = Instance.getcached(self.executable, name)
         return inst.returncode is not None
 
 
