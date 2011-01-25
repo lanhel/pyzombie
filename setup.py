@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 """pyzombie project setup."""
 __author__ = ('Lance Finn Helsten',)
-__version__ = '0.0'
+__version__ = '1.0'
 __copyright__ = """Copyright (C) 2009 Lance Finn Helsten"""
 __license__ = """
 This program is free software: you can redistribute it and/or modify
@@ -207,13 +207,26 @@ setup(
     version=__version__,
     author='Lance Finn Helsten',
     author_email='lanhel@me.com',
-    url='http://www.flyingtitans.com/products/pyzombie',
+	#maintainer='',
+    #maintainer_email='',
+    url='http://code.google.com/p/pyzombie/',
+    #url='http://www.flyingtitans.com/products/pyzombie',
     description='Remote code execution server.',
-    #long_description=""" """,
-    #download_url='',
-    #classifiers=[],
-    #platforms=[],
-    license="GNU Public License",    
+    long_description=open('README.txt').read(),
+    platforms=['OS Independent'],
+    download_url='http://code.google.com/p/pyzombie/downloads/list',
+    license="GNU Affero General Public License",    
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Environment :: Web Environment',
+		'Intended Audience :: Developers',
+		'License :: OSI Approved :: GNU Affero General Public License v3',
+		'Operating System :: OS Independent',
+		'Topic :: Software Development :: Quality Assurance',
+		'Topic :: Software Development :: Testing',
+		'Topic :: Software Development :: Testing :: Traffic Generation',
+		'Topic :: Utilities'
+    ],
     scripts=['pyzombied.py'],
     packages=['pyzombie', 'pyzombie/handlers'],
     #package_dir={'' : 'src'},
@@ -225,9 +238,7 @@ setup(
             "test":test,
             "deploy":deploy,
             "changeversion":changeversion
-        },
-    classifiers = [
-        ]
+        }
 )
 
 

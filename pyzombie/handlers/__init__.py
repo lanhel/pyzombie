@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 """
 """
-__version__ = """0.0 Copyright (C) 2009 Lance Finn Helsten"""
+__version__ = '1.0'
 __license__ = """
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
