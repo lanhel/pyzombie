@@ -173,7 +173,7 @@ class changeversion(Command):
                     file.write(contents)
                     file.close()
                 elif match:
-                    print("Invalid version {0} in {1}.".format(match.groups()[0], path), file=sys.stderr)
+                    raise ValueError("Invalid version {0} in {1}.".format(match.groups()[0], path))
 
 
 class deploy(Command):

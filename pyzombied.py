@@ -23,7 +23,7 @@ __docformat__ = "reStructuredText en"
 
 import sys
 if sys.version_info < (3, 0):
-    raise Exception("pyzombie requires Python 3.0 or higher.")    
+    raise Exception("{0} Requires Python 3.0 or higher.".format(sys.argv[0]))
 import os
 import logging
 from optparse import OptionParser
