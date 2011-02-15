@@ -4,7 +4,7 @@
 """pyzombie HTTP RESTful server handler returning the set of available
 executables."""
 __author__ = ('Lance Finn Helsten',)
-__version__ = '1.0'
+__version__ = '1.0.1'
 __copyright__ = """Copyright (C) 2009 Lance Finn Helsten"""
 __license__ = """
 This program is free software: you can redistribute it and/or modify

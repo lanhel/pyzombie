@@ -1,6 +1,7 @@
 syntax: glob
 *~
 *.pyc
+*.tmproj
 .DS_Store
 
 syntax: regexp

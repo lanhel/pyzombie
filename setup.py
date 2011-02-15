@@ -3,7 +3,7 @@
 #-------------------------------------------------------------------------------
 """pyzombie project setup."""
 __author__ = ('Lance Finn Helsten',)
-__version__ = '1.0'
+__version__ = '1.0.1'
 __copyright__ = """Copyright (C) 2009 Lance Finn Helsten"""
 __license__ = """
 This program is free software: you can redistribute it and/or modify
@@ -130,52 +130,6 @@ class acceptance(Command):
         pass
 
 
-class changeversion(Command):
-    description = "Change first __version__ string in all python files where the version is in xx.yy.zz form."
-    user_options = [
-        ("newversion=", None, "New version for all package.")
-    ]
-    
-    def initialize_options(self):
-        self.oldversion = tuple(__version__.split('.'))
-        self.newversion = None
-        
-    def finalize_options(self):
-        self.newversion = tuple(self.newversion.split('.'))
-        if len(self.newversion) < 2 or 3 < len(self.newversion):
-            print("New version must be a xx.yy or xx.yy.zz format.")
-            sys.exit(errno.EINVAL)
-        if self.newversion < self.oldversion:
-            print("New version must be greater than {{0}.{1}.{2}}.".format(self.oldversion))
-            sys.exit(errno.EINVAL)
-        self.srcpat = re.compile(r"""__version__\s*=\s*['"](\d{1,2}\.\d{1,2}(\.\d{1,2})?)['"]\s*""", re.MULTILINE)
-        if len(self.newversion) == 2:
-            self.repl = """__version__ = '{0}.{1}'\n""".format(*self.newversion)
-        else:
-            self.repl = """__version__ = '{0}.{1}.{2}'\n""".format(*self.newversion)
-
-    def run(self):
-        self.walkdirs('pyzombie')
-        self.walkdirs('test')
-    
-    def walkdirs(self, dir):
-        for dirpath, dirnames, filenames in os.walk(os.path.abspath(dir)):
-            filenames = [f for f in filenames if os.path.splitext(f)[1] == '.py']
-            for f in filenames:
-                path = os.path.join(dirpath, f)
-                file = open(path, mode='r')
-                contents = file.read()
-                file.close()
-                match = self.srcpat.search(contents)
-                if match and tuple(match.groups()[0].split('.')) == self.oldversion:
-                    contents = self.srcpat.sub(self.repl, contents)
-                    file = open(path, mode='w')
-                    file.write(contents)
-                    file.close()
-                elif match:
-                    raise ValueError("Invalid version {0} in {1}.".format(match.groups()[0], path))
-
-
 class deploy(Command):
     description = "Place the distribution archive onto the distribution server."
     user_options = []
@@ -236,8 +190,7 @@ setup(
     cmdclass={
             "build":build,
             "test":test,
-            "deploy":deploy,
-            "changeversion":changeversion
+            "deploy":deploy
         }
 )
 
