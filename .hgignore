@@ -4,6 +4,9 @@ syntax: glob
 *.tmproj
 .DS_Store
 
+MANIFEST
+
+
 syntax: regexp
 build$
 dist$
