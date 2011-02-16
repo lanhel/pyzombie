@@ -1,13 +1,37 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """
-Environment:
-    PYZOMBIEHOME
-        pyzombie's home directory.
-        Default: current working directory.
-        Demon Mode: current user's home directory or empty if user is root.
+**Name**
+    pyzombied — Start pyzombie server.
 
-Directories and Files:
+**Synopsis**
+    ``pyzombied.py [options]``
+
+**Description**
+    The ``pyzombied.py`` command shall start the *pyzombie* HTTP RESTful
+    server on port 8080.
+
+**Options**
+    ``--home``
+        Home directory to override $PYZOMBIEHOME.
+    
+    ``--config``
+        Configuration file. Default: ``$PYZOMBIEHOME/etc/pyzombie.conf``.
+    
+    ``--deamon``
+        Start pyzombie as a deamon under current user.
+    
+    ``--verbose``
+        Change default logging verbosity: ``critical``, ``error``,
+        ``warning``, ``info``, ``debug``.
+
+**Environment**
+    PYZOMBIEHOME
+        - pyzombie's home directory.
+        - Default: current working directory.
+        - Demon Mode: current user's home directory or empty if user is root.
+
+**Directories and Files**
     $PYZOMBIEHOME/etc/pyzombie.conf
         Configuration file.
     
@@ -23,22 +47,28 @@ Directories and Files:
     $PYZOMBIEHOME/tmp/pyzombie
         Directory to contain temporary files.
 
-Configuration:
+**Configuration**
     [pyzombie]
-        address     The server address or DNS name: default localhost.
-        port        The TCP/IP port to listen: default 8008.
+        ``address``
+            The server address or DNS name: default localhost.
+        ``port``
+            The TCP/IP port to listen: default 8008.
     
     [pyzombie_filesystem]
-        var         The variable data root directory: default /var
+        ``var``
+            The variable data root directory: default /var
     
-    [loggers]       Python logging configuration section.
-        Requires two named loggers: root and zombie.
+    [loggers]
+        ``root``
+            Required
+        ``zombie``
+            Required
     
-    [handlers]      Python logging configuration section.
+    [handlers]
     
-    [formatters]    Python logging configuration section.
+    [formatters]
 
-License:
+**License**
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
     by the Free Software Foundation, either version 3 of the License, or

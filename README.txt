@@ -7,7 +7,6 @@ be executed on a remote host. The principle purpose is to allow
 test code to be loaded and executed remotely on hosts for systems
 that have no direct network presence.
 
-
 .. WARNING::
     Executing pyzombie on any machine will open it up to all attacks
     by anyone or anything that has access to the internet (TCP/IP)

@@ -1,0 +1,31 @@
+========
+pyzombie
+========
+--------
+Install
+--------
+
+
+Build
+=====
+- Requirements
+  - Python 3
+  - Sphinx
+    #. `Download Sphinx (> 1.1) source <http://pypi.python.org/pypi/Sphinx>`_
+    #. Right now 1.1 is in development so:
+      #. `Clone repository <https://bitbucket.org/birkenfeld/sphinx/>`_
+      #. Use distutils to build and install.
+- `python3.1 setup.py build`
+
+
+Documentation
+=============
+- `make html`
+
+
+.. |date| date:: %Y-%m-%d %H:%M:%S %Z
+.. footer::
+    | Copyright © 2009 Lance Finn Helsten
+    | Licensed under GNU Affero General Public License version 3.
+    | Document generated: |date|.
+
