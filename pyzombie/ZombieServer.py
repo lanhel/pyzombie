@@ -35,17 +35,27 @@ import logging
 import logging.config
 import http.client
 import http.server
+import socketserver
 from .ZombieRequest import ZombieRequest
 from .ZombieConfig import config, CONFIG_INIT
 
 ###
 ###
 ###
-class ZombieServer(http.server.HTTPServer):
-    def __init__(self, configfile, loglevel=logging.INFO):
-        self.__init_config(configfile)
-        self.__init_logging(configfile, loglevel)
-        self.__init_filesystem()
+class ZombieServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    """Create a new ZombieServer to handle RESTful HTTP requests.
+    
+    This is built on `http.server.HTTPServer`_ so all HTTP requirements
+    are handled correctly.
+    
+    :param configfile: Path to the server's configuration file.
+    :param loglevel: The default log level for the new server.
+    """
+    def __init__(self):
+        self.__init_makedir("log")
+        self.__init_makedir("data")
+        self.__init_makedir("cache")
+        self.__init_makedir("spool")
         
         ### Start the server
         address = config.get("pyzombie", "address")
@@ -57,6 +67,7 @@ class ZombieServer(http.server.HTTPServer):
         self.maxagestatic = config.get("pyzombie", "maxage_static")
     
     def start(self):
+        """Start the server."""
         try:
             sthread = threading.Thread(target=self.serve_forever)
             sthread.start()
@@ -64,28 +75,6 @@ class ZombieServer(http.server.HTTPServer):
                 time.sleep(0.1)
         finally:
             self.shutdown()
-    
-    def __init_config(self, configfile):
-        if os.path.isfile(configfile):
-            print("Configuration:", configfile)
-            config.read(configfile)
-    
-    def __init_logging(self, configfile, loglevel):
-        try:
-            logging.config.fileConfig(configfile)
-        except configparser.NoSectionError:
-            logging.config.fileConfig(io.StringIO(CONFIG_INIT))
-            logging.getLogger("zombie").setLevel(loglevel)
-            logging.getLogger().info("Using default logging configuration.")
-        logging.getLogger().info("Logging initialized.")
-    
-    
-    def __init_filesystem(self):
-        self.__init_makedir("log")
-        self.__init_makedir("data")
-        self.__init_makedir("cache")
-        self.__init_makedir("spool")
-    
     
     def __init_makedir(self, confname):
         """Make a directory given a named value in the config [filesystem] section."""

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#-------------------------------------------------------------------------------
+#----------------------------------------------------------------------------
 """pyzombie project setup."""
 __author__ = ('Lance Finn Helsten',)
 __version__ = '1.0.1'
@@ -55,8 +55,10 @@ class build(_build):
                 or os.path.getmtime(src) > os.path.getmtime(dst)):
                     print("translating", src)
                     env = dict(os.environ)
-                    env["PATH"] = os.path.abspath("setup/bin") + os.pathsep + env["PATH"]
-                    env["PYTHONPATH"] = os.path.abspath("setup/lib/python") + os.pathsep + env["PYTHONPATH"]
+                    env["PATH"] = os.path.abspath("setup/bin") + os.pathsep \
+                            + env["PATH"]
+                    env["PYTHONPATH"] = os.path.abspath("setup/lib/python") \
+                            + os.pathsep + env["PYTHONPATH"]
                     args = [sys.executable,
                             os.path.abspath("setup/bin/rst2html.py"),
                             os.path.abspath(src),
@@ -90,7 +92,8 @@ class test(Command):
             tests = [os.path.join(dirpath, f) for f in filenames
                     if f.endswith('Test.py') or f.endswith('TestCase.py')]
             tests = [os.path.abspath(f) for f in tests]
-            tests = [f for f in tests if os.path.exists(f) and os.path.isfile(f)]
+            tests = [f for f in tests
+                    if os.path.exists(f) and os.path.isfile(f)]
             tests = [os.path.split(f)[1] for f in tests]
             tests = [os.path.splitext(f)[0] for f in tests]
             self.suite.extend(tests)
@@ -151,7 +154,8 @@ class deploy(Command):
     def run(self):
         distdir = os.path.join(os.getcwd(), 'dist')
         args = ['/usr/bin/rsync', '-v']
-        args.extend([os.path.abspath(os.path.join(distdir, f)) for f in os.listdir(distdir)])
+        args.extend([os.path.abspath(os.path.join(distdir, f))
+                for f in os.listdir(distdir)])
         args.append('{0}@{1}:{2}'.format(self.user, self.host, self.path))
         pid = subprocess.Popen(args)
         pid.wait()

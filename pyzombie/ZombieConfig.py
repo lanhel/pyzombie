@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #-------------------------------------------------------------------------------
-"""pyzombie HTTP RESTful server configuration."""
+"""pyzombie HTTP RESTful server configuration that conforms to a configparser
+interface."""
 __author__ = ('Lance Finn Helsten',)
 __version__ = '1.0.1'
 __copyright__ = """Copyright (C) 2009 Lance Finn Helsten"""
@@ -70,7 +71,7 @@ level=DEBUG
 handlers=consoleHandler
 
 [logger_zombie]
-level=DEBUG
+level=INFO
 handlers=consoleHandler
 qualname=zombie
 propagate=0

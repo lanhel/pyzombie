@@ -57,8 +57,13 @@ DISPATCH_TABLE = [
 
 
 class ZombieRequest(http.server.BaseHTTPRequestHandler):
-    """Handle all Zombie REST verbs."""
+    """Extension of HTTP request handler to dispatch on Zombie verbs.
     
+    :param request: The request to process.
+    :param client_address: Tuple of the form ``(host, port)`` referring to
+        the client’s address.
+    :param server: The RESTful HTTP server instance.
+    """
     def __init__(self, request, client_address, server):
         self.protocol_version = "HTTP/1.1"
         self.server_version = "pyzombie/" + __version__
