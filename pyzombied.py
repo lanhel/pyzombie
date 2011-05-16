@@ -10,7 +10,7 @@
 
 **Description**
     The ``pyzombied.py`` command shall start the *pyzombie* HTTP RESTful
-    server on port 8080.
+    server.
 
 **Options**
     ``--home``
@@ -21,6 +21,9 @@
     
     ``--deamon``
         Start pyzombie as a deamon under current user.
+    
+    ``--port``
+        Start pyzombie listening on this port. Default: 8008.
     
     ``--verbose``
         Change default logging verbosity: ``critical``, ``error``,

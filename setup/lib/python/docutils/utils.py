@@ -180,9 +180,7 @@ class Reporter:
         if self.stream and (level >= self.report_level
                             or self.debug_flag and level == self.DEBUG_LEVEL
                             or level >= self.halt_level):
-            msgtext = msg.astext().encode(self.encoding, self.error_handler)
-            self.stream.write(msgtext)
-            self.stream.write(b('\n'))
+            print(msg, file=self.stream)
         if level >= self.halt_level:
             raise SystemMessage(msg, level)
         if level > self.DEBUG_LEVEL or self.debug_flag:

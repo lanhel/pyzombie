@@ -31,7 +31,7 @@ from pyzombie.ZombieConfig import config
 
 
 
-class ZobieConfigValuesTest(unittest.TestCase):    
+class ZombieConfigValuesTest(unittest.TestCase):    
     def runTest(self):
         self.assertEqual("localhost", config.get("pyzombie", "address"))
         self.assertEqual("8008", config.get("pyzombie", "port"))
