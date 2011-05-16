@@ -199,7 +199,11 @@ class Handler:
                 path)
     
     def rfile_safe(self):
-        return HttpServerFP(self.req)
+        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        if sys.version_info >= (3, 2):
+            return self.req.rfile
+        else:
+            return HttpServerFP(self.req)
     
     def multipart(self):
         ctype, pdict = cgi.parse_header(self.req.headers['Content-Type'])
