@@ -6,7 +6,7 @@ pyzombie RESTful Resources
 :Author:    Lance Finn Helsten (helsten@acm.org)
 :Version:   0.0
 :Copyright: © 2010 Lance Finn Helsten, All Rights Reserved.
-:License:   GNU Affero General Public License version 3
+:License:   Apache License, Version 2.0
 
 
 
