@@ -61,28 +61,45 @@ class build_docutils(Command):
             self.build_lib = os.path.join(self.build_base, 'lib')
     
     def run(self):
-        env = dict(os.environ)
-        env["PATH"] = os.path.abspath("setup/bin") + os.pathsep \
-                + env["PATH"]
-        env["PYTHONPATH"] = os.path.abspath("setup/lib/python") \
-                + os.pathsep + env["PYTHONPATH"]
-        args = [sys.executable,
-                os.path.abspath("setup/bin/rst2html.py"),
-                "SRC_PATH_ARG_2",
-                "DST_PATH_ARG_3",
+        args = ["rst2html.py",
                 "--stylesheet", "help.css",
                 "--link-stylesheet",
-                "--traceback"]
+                "--traceback",
+                "SRC_PATH_ARG_2",
+                "DST_PATH_ARG_3"]
 
-        for f in doc_paths(self.distribution.packages):
+        #Process the reStructuredText files.
+        try:
+            for f in doc_paths(self.distribution.packages):
+                src = os.path.abspath(f)
+                dst = os.path.abspath(
+                    os.path.join(self.build_lib, os.path.splitext(f)[0] + ".html"))
+                if not os.path.isdir(os.path.dirname(dst)):
+                    os.makedirs(os.path.dirname(dst))
+                if self.force or not os.path.isfile(dst) or os.path.getmtime(src) > os.path.getmtime(dst):
+                    print("Docutils", f)
+                    args[-2] = os.path.abspath(src)
+                    args[-1] = os.path.abspath(dst)
+                    ret = subprocess.call(args)
+        except OSError as err:
+            if err.errno == errno.ENOENT:
+                print("error: Docutils missing.", file=sys.stderr)
+            raise err
+        
+        #Copy CSS files
+        for p in doc_dirs(self.distribution.packages):
+            src = '/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/docutils/writers/html4css1/html4css1.css'
+            dst = os.path.join(self.build_lib, p, 'html4css1.css')
+            print("Copy", dst)
+            shutil.copyfile(src, dst)
+
+        files = [[os.path.join(p, f) for f in os.listdir(p)]
+                for p in doc_dirs(self.distribution.packages)]
+        files = [f for f in itertools.chain(*files)]
+        files = [f for f in files if os.path.splitext(f)[1] not in [".py", ".rst"]]
+        for f in files:
             src = os.path.abspath(f)
-            dst = os.path.abspath(
-                os.path.join(self.build_lib, os.path.splitext(f)[0] + ".html"))
-            if self.force or os.path.getmtime(src) > os.path.getmtime(dst):
-                print("Docutils", f)
-                args[2] = os.path.abspath(src)
-                args[3] = os.path.abspath(dst)
-                subprocess.call(args, env=env)
-
+            dst = os.path.abspath(os.path.join(self.build_lib, f))
+            shutil.copyfile(src, dst)
 
 
