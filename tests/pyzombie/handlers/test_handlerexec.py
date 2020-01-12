@@ -25,6 +25,7 @@ import io
 import re
 import unittest
 import http.client
+from http import HTTPStatus
 from pyzombie.Executable import Executable
 from pyzombie.handlers import HandlerExec
 from MockRequest import MockRequest
@@ -50,7 +51,7 @@ class HandlerExecGetTest(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, str(http.client.OK))
+        self.assertEqual(int(resp.code), HTTPStatus.OK.value)
         self.assertEqual(resp.header["Content-Type"], "text/x-python")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))

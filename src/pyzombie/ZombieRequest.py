@@ -61,7 +61,7 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
 
     def __init__(self, request, client_address, server):
         self.protocol_version = "HTTP/1.1"
-        self.server_version = "pyzombie/" + get_version(root=".", relative_to=__file__)
+        self.server_version = "pyzombie/" + get_version()
         super().__init__(request, client_address, server)
 
     def resolvedispatch(self):

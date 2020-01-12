@@ -1,4 +1,4 @@
-#!/usr/bin/env /usr/local/bin/python3.1
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 """Source to be uploaded to a server that will copy what is on stdin
 to stdout, and will produce associated diagnostic information on stderr."""

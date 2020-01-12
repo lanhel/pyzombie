@@ -88,8 +88,8 @@ datefmt=
 ###
 ### Global configuration
 ###
-config = configparser.SafeConfigParser()
-config.readfp(io.StringIO(CONFIG_INIT))
+config = configparser.ConfigParser()
+config.read_file(io.StringIO(CONFIG_INIT))
 
 
 def datadir():

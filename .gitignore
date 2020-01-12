@@ -1,57 +1,53 @@
-# OS
-.DS_Store
-
-# C
-*.so
-
-# CocoaPods
-Pods/
+############
+# .gitignore
+############
 
 
-###
-### Python
-###
+##########
+# Documentation archives
 
-# Python Virtual Environment
+
+##########
+# Generated project directories
+
+var
+tmp
+
+
+##########
+# Editors
+
+*~
+.*.swp
+Session.vim
+*.sublime-project
+*.sublime-workspace
+
+
+##########
+# Python
+
 .venv
 venv
 VENV
 
-# Python compiled files
-__pycache__/
-*.py[cod]
-
-# Python Distribution / packaging
-.Python
-env/
 build/
-develop-eggs/
 dist/
-downloads/
-eggs/
-lib/
-lib64/
-parts/
 sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
 .eggs
+*.egg-info
+pip-wheel-metadata
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+__pycache__
+*.pyc
+*.pyo
+*.log
+*.orig
+.pycache
 
-# Python Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.cache
-nosetests.xml
-coverage.xml
-
-# Python Translations
-*.mo
-*.pot
+.pytest_cache/
+.coverage/
+coverage_html_report/
+.mypy_cache/
+.hypothesis/
 

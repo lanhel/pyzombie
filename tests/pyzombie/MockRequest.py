@@ -25,6 +25,7 @@ import time
 import configparser
 import http.client
 import unittest
+from setuptools_scm import get_version
 from MockServer import MockServer
 
 
@@ -57,7 +58,7 @@ class MockRequest:
     def __init__(self):
         self.server = MockServer()
         self.protocol_version = "HTTP/1.1"
-        self.server_version = "MockRequest/" + __version__
+        self.server_version = "MockRequest/" + get_version()
         self.error_content_type = "text/plain"
         self.error_message_format = (
             """Code: %(code)d\nMessage: %(message)s\nExplain: %(explain)s"""

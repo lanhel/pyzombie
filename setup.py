@@ -17,6 +17,6 @@ __license__ = """
     limitations under the License.
 """
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(use_scm_version=True)

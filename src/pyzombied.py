@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 """
 **Name**
     pyzombied — Start pyzombie server.
@@ -15,16 +15,16 @@
 **Options**
     ``--home``
         Home directory to override $PYZOMBIEHOME.
-    
+
     ``--config``
         Configuration file. Default: ``$PYZOMBIEHOME/etc/pyzombie.conf``.
-    
+
     ``--deamon``
         Start pyzombie as a deamon under current user.
-    
+
     ``--port``
         Start pyzombie listening on this port. Default: 8008.
-    
+
     ``--verbose``
         Change default logging verbosity: ``critical``, ``error``,
         ``warning``, ``info``, ``debug``.
@@ -38,16 +38,16 @@
 **Directories and Files**
     ``$PYZOMBIEHOME/etc/pyzombie.conf``
         Configuration file.
-    
+
     ``$PYZOMBIEHOME/var/run/pyzombie.pid``
         File that contains the current pyzombie process id.
-        
+
     ``$PYZOMBIEHOME/var/log/pyzombie``
         Directory that contains pyzombie log files.
-    
+
     ``$PYZOMBIEHOME/var/spool/pyzombie``
         Directory that contains executions waiting to run.
-    
+
     ``$PYZOMBIEHOME/tmp/pyzombie``
         Directory to contain temporary files.
 
@@ -57,23 +57,22 @@
             The server address or DNS name: default localhost.
         ``port``
             The TCP/IP port to listen: default 8008.
-    
+
     [pyzombie_filesystem]
         ``var``
             The variable data root directory: default /var
-    
+
     [loggers]
         ``root``
             Required
         ``zombie``
             Required
-    
+
     [handlers]
-    
+
     [formatters]
 """
-__author__ = ('Lance Finn Helsten',)
-__version__ = '1.0.1'
+__author__ = ("Lance Finn Helsten",)
 __copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
 __license__ = """
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,20 +90,23 @@ limitations under the License.
 __docformat__ = "reStructuredText en"
 
 import sys
-if sys.version_info < (3, 0):
-    raise Exception("{0} Requires Python 3.0 or higher.".format(sys.argv[0]))
+
+if sys.version_info < (3, 5):
+    raise Exception("{0} Requires Python 3.5 or higher.".format(sys.argv[0]))
 import os
 import errno
 import io
 import configparser
 import logging
 from optparse import OptionParser
+from setuptools_scm import get_version
 import pyzombie
 
 
 ###
 ### Functions
 ###
+
 
 def resolvepath(path):
     """Fully resolve the given path into an absolute path taking into account,
@@ -118,57 +120,94 @@ def resolvepath(path):
 
 ### Parse the arguments
 parser = OptionParser(
-    description='pyzombie service',
-    version='%%prog %s' % (__version__,),
-    usage='usage: %prog [options]')
+    description="pyzombie service",
+    version="%%prog %s" % (get_version(),),
+    usage="usage: %prog [options]",
+)
 
-parser.add_option('', '--home',
-    action='store', type='string', dest='home', default=None,
-    help='Home directory to override $PYZOMBIEHOME.')
-parser.add_option('', '--config',
-    action='store', type='string', dest='config', default=None,
-    help='Configuration file. Default: $PYZOMBIEHOME/etc/pyzombie.conf')
-parser.add_option('', '--deamon',
-    action='store_true', dest='deamon', default=False,
-    help='Start pyzombie as a deamon under current user.')
-parser.add_option('', '--port',
-        action='store', type='string', dest='port', default=None,
-        help='TCP port pyzombie will listen (default: 8008).')
-parser.add_option('', '--verbose',
-    action='store', type='string', dest='verbose', default=None,
-    help='Change default logging verbosity: critical, error, warning, info, debug.')
-                
+parser.add_option(
+    "",
+    "--home",
+    action="store",
+    type="string",
+    dest="home",
+    default=None,
+    help="Home directory to override $PYZOMBIEHOME.",
+)
+parser.add_option(
+    "",
+    "--config",
+    action="store",
+    type="string",
+    dest="config",
+    default=None,
+    help="Configuration file. Default: $PYZOMBIEHOME/etc/pyzombie.conf",
+)
+parser.add_option(
+    "",
+    "--deamon",
+    action="store_true",
+    dest="deamon",
+    default=False,
+    help="Start pyzombie as a deamon under current user.",
+)
+parser.add_option(
+    "",
+    "--port",
+    action="store",
+    type="string",
+    dest="port",
+    default=None,
+    help="TCP port pyzombie will listen (default: 8008).",
+)
+parser.add_option(
+    "",
+    "--verbose",
+    action="store",
+    type="string",
+    dest="verbose",
+    default=None,
+    help="Change default logging verbosity: critical, error, warning, info, debug.",
+)
+
 options, args = parser.parse_args()
 
 
 ###
 ### Environment
 ###
-if 'PYZOMBIEHOME' in os.environ:
-    os.environ['PYZOMBIEHOME'] = os.environ['PYZOMBIEHOME']
+if "PYZOMBIEHOME" in os.environ:
+    os.environ["PYZOMBIEHOME"] = os.environ["PYZOMBIEHOME"]
 else:
     if options.deamon:
-        if os.environ['USER'] == 'root':
-            os.environ['PYZOMBIEHOME'] = '/'
+        if os.environ["USER"] == "root":
+            os.environ["PYZOMBIEHOME"] = "/"
         else:
-            os.environ['PYZOMBIEHOME'] = os.environ['HOME']
+            os.environ["PYZOMBIEHOME"] = os.environ["HOME"]
     else:
-        os.environ['PYZOMBIEHOME'] = os.curdir
+        os.environ["PYZOMBIEHOME"] = os.curdir
 
-if not os.path.isdir(resolvepath(os.environ['PYZOMBIEHOME'])):
-    print("""$PYZOMBIEHOME="{0[PYZOMBIEHOME]}" does not exist or is not a directory.""".format(os.environ), file=sys.stderr)
+if not os.path.isdir(resolvepath(os.environ["PYZOMBIEHOME"])):
+    print(
+        """$PYZOMBIEHOME="{0[PYZOMBIEHOME]}" does not exist or is not a directory.""".format(
+            os.environ
+        ),
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 if not options.config:
-    options.config = os.path.join(resolvepath(os.environ['PYZOMBIEHOME']), 'etc', 'pyzombie.conf')
+    options.config = os.path.join(
+        resolvepath(os.environ["PYZOMBIEHOME"]), "etc", "pyzombie.conf"
+    )
 
 print("Configuration:", options.config)
 pyzombie.ZombieConfig.config.read(options.config)
 
 if options.port:
-    pyzombie.ZombieConfig.config.set('pyzombie', 'port', options.port)
+    pyzombie.ZombieConfig.config.set("pyzombie", "port", options.port)
 if options.verbose:
-    pyzombie.ZombieConfig.config.set('logger_zombie', 'level', options.verbose.upper())
+    pyzombie.ZombieConfig.config.set("logger_zombie", "level", options.verbose.upper())
 
 
 ###
@@ -192,4 +231,3 @@ try:
     zombie.start()
 except KeyboardInterrupt:
     print("User cancel.")
-

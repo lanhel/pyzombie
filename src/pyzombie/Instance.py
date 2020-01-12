@@ -215,7 +215,7 @@ class Instance:
             except OSError as err:
                 if err.errno != errno.ENOENT:
                     raise err
-                logging.getLogger("zombie").warn(
+                logging.getLogger("zombie").warning(
                     "Unable to find executable for instance {0}/{1}.".format(
                         self.executable.name, self.name
                     )
@@ -233,7 +233,7 @@ class Instance:
         types (e.g. dict, list, and string) that can be used in XML, JSON,
         or YAML marshalling."""
         state = {}
-        state["version"] = get_version(root=".", relative_to=__file__)
+        state["version"] = get_version()
         state["name"] = "{0}/{1}/{2}".format(self.executable.name, urlpath, self.name)
         state["self"] = "{0}/{1}".format(urlprefix.rstrip("/"), state["name"])
         state["stdin"] = "{0}/{1}".format(state["self"].rstrip("/"), "stdin")

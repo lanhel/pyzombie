@@ -29,8 +29,8 @@ from pyzombie.ZombieServer import CONFIG_INIT
 
 class MockServer:
     def __init__(self):
-        self.config = configparser.SafeConfigParser()
-        self.config.readfp(io.StringIO(CONFIG_INIT))
+        self.config = configparser.ConfigParser()
+        self.config.read_file(io.StringIO(CONFIG_INIT))
 
         self.stamp = datetime.datetime(1966, 8, 29, 11, 53, 22, 435123)
         self.stamprfc850 = self.stamp.strftime("%a, %d %b %Y %H:%M:%S GMT")

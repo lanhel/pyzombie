@@ -1,4 +1,4 @@
-#!/usr/bin/env /usr/local/bin/python3.1
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 """Source to be uploaded to a server that will test arguments, envionment,
 stdin, stdout, and stderr for proper behavior."""
@@ -33,25 +33,25 @@ STDERR = """Standard Error Test\n"""
 
 def validateResults(utest, name, returncode, stdout, stderr):
     """Validate the results of executing this file.
-    
-    utest
-        The unit test case that will handle asserts.
-    returncode
-        The return code produced by this file.
-    stdout
-        The file that contains the stdout produced by executing this file.
-    stderr
-        The file that contains the stderr produced by executing this file.
-    """
-    actualout = json.load(stdout)
-    utest.assertEquals(actualout["name"], NAME)
-    for e in ENVIRON.keys():
-        utest.assertEquals(actualout["environ"][e], ENVIRON[e])
-    # utest.assertTrue(name in actualout['argv'][0])
-    utest.assertEquals(actualout["argv"][1:], ARGV)
-    utest.assertEquals("".join(actualout["stdin"]), STDIN)
 
-    utest.assertEquals(STDERR, stderr.read())
+    :param utest: The unit test case that will handle asserts.
+    :param returncode: The return code produced by this file.
+    :param stdout: The file that contains the stdout produced by executing this file.
+    :param stderr: The file that contains the stderr produced by executing this file.
+    """
+    try:
+        actualout = json.load(stdout)
+    except json.decoder.JSONDecodeError as err:
+        print(stderr.read())
+        raise err
+    utest.assertEqual(actualout["name"], NAME)
+    for e in ENVIRON.keys():
+        utest.assertEqual(actualout["environ"][e], ENVIRON[e])
+    # utest.assertTrue(name in actualout['argv'][0])
+    utest.assertEqual(actualout["argv"][1:], ARGV)
+    utest.assertEqual("".join(actualout["stdin"]), STDIN)
+
+    utest.assertEqual(STDERR, stderr.read())
 
 
 def dumpstdout(fp, env, argv, stdin):

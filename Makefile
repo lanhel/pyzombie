@@ -66,7 +66,7 @@ clean:				## Clean generated files
 	@rm -rf .eggs
 	@rm -rf *.egg-info
 	@rm -rf pip-wheel-metadata
-	@find pyzombie -name '__pycache__' -exec rm -rf {} \; -prune
+	@find src -name '__pycache__' -exec rm -rf {} \; -prune
 	@find tests -name '__pycache__' -exec rm -rf {} \; -prune
 
 
@@ -100,17 +100,17 @@ lint:				## Check source for conformance
 	@echo Updating lint tools
 	@${PIP} ${PIPFLAGS} install --upgrade pip
 	@${PIP} ${PIPFLAGS} install --upgrade -e ".[lint]"
-	black --check setup.py pyzombie tests
-	pylint -f parseable -r n pyzombie
-	pycodestyle pyzombie
-	pydocstyle pyzombie
-	mypy pyzombie
+	black --check setup.py src tests
+	pylint -f parseable -r n src
+	pycodestyle src
+	pydocstyle src
+	mypy src
 
 
 format:				## Format source code to standard
 	@echo Formatting source
 	@${PIP} ${PIPFLAGS} install --upgrade -e ".[dev]"
-	find pyzombie -name '*.py' -exec black -q {} \;
+	find src -name '*.py' -exec black -q {} \;
 	find tests -name '*.py' -exec black -q {} \;
 
 
