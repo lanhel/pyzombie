@@ -1,130 +1,131 @@
-# Makefile for Sphinx documentation
+# :Author: Lance Finn Helsten
+# :Copyright: 2009 Lance Finn Helsten <lanhel@flyingtitans.com>
+# :License:
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#   
+#   http://www.apache.org/licenses/LICENSE-2.0
+#   
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+.POSIX:
+
+SETUP         = python -m setup
+SETUPFLAGS    =
+PIP           = python -m pip
+PIPFLAGS      = --quiet
+
+.PHONY: install
+install:			## Install system
+	@${PIP} ${PIPFLAGS} install --upgrade pip
+	@${PIP} ${PIPFLAGS} install --upgrade -e .
+	${SETUP} ${SETUPFLAGS} install
+
+
+# Publish requires a username & password for twine to upload to PyPI
+# ``export TWINE_USERNAME=<username>``
+# ``export TWINE_PASSWORD=<password>``
 #
+# For automated upload with API token the following is required:
+# ``export TWINE_USERNAME=__token__``
+# ``export TWINE_PASSWORD=pypi-<token_value>``
+.PHONY: publish
+publish: clean		## Publish the library to the central PyPi repository
+	@${PIP} ${PIPFLAGS} install --upgrade pip setuptools wheel twine
+	@${PIP} ${PIPFLAGS} install --upgrade -e ".[docs]"
+	${SETUP} ${SETUPFLAGS} sdist bdist_wheel
+	python -m twine check dist/*
+	python -m twine upload --verbose dist/*
+	@$(MAKE) -C docs publish
 
-# You can set these variables from the command line.
-SPHINXOPTS    =
-SPHINXBUILD   = /Library/Python/3.2/bin/sphinx-build
-PAPER         =
-BUILDDIR      = build
 
-# Internal variables.
-PAPEROPT_a4     = -D latex_paper_size=a4
-PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) Doc
+.PHONY: docs
+docs:				## Create documentation
+	@echo Update documentation tools
+	@${PIP} ${PIPFLAGS} install --upgrade pip
+	@${PIP} ${PIPFLAGS} install --upgrade -e ".[docs]"
+	@echo Create documentation
+	@$(MAKE) -C docs docs
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
 
+.PHONY: validate
+validate: lint test	## Validate project for CI, CD, and publish
+
+
+clean:				## Clean generated files
+	@$(MAKE) -C docs clean
+	@rm -rf build
+	@rm -rf dist
+	@rm -rf sdist
+	@rm -rf var
+	@rm -rf tmp
+	@rm -rf .eggs
+	@rm -rf *.egg-info
+	@rm -rf pip-wheel-metadata
+	@find pyzombie -name '__pycache__' -exec rm -rf {} \; -prune
+	@find tests -name '__pycache__' -exec rm -rf {} \; -prune
+
+
+clean_cache:		## Clean caches
+	@rm -rf .pytest_cache
+	@rm -rf .coverage
+	@rm -rf coverage_html_report
+	@rm -rf .mypy_cache
+	@rm -rf .hypothesis
+
+
+.PHONY: build
+build:				## Build into ``./build`` directory
+	@echo Updating build tools
+	@${PIP} ${PIPFLAGS} install --upgrade pip
+	@${PIP} ${PIPFLAGS} install --upgrade -e .
+	${SETUP} ${SETUPFLAGS} build
+
+
+.PHONY: test
+test:				## Run test suite
+	@echo Updating test tools
+	@${PIP} ${PIPFLAGS} install --upgrade pip
+	@${PIP} ${PIPFLAGS} install --upgrade -e ".[tests]"
+	coverage run && coverage report && coverage html
+
+
+.PHONY: lint
+lint:				## Check source for conformance
+	@echo Checking source conformance
+	@echo Updating lint tools
+	@${PIP} ${PIPFLAGS} install --upgrade pip
+	@${PIP} ${PIPFLAGS} install --upgrade -e ".[lint]"
+	black --check setup.py pyzombie tests
+	pylint -f parseable -r n pyzombie
+	pycodestyle pyzombie
+	pydocstyle pyzombie
+	mypy pyzombie
+
+
+format:				## Format source code to standard
+	@echo Formatting source
+	@${PIP} ${PIPFLAGS} install --upgrade -e ".[dev]"
+	find pyzombie -name '*.py' -exec black -q {} \;
+	find tests -name '*.py' -exec black -q {} \;
+
+
+updatedev:			## Update / init all packages for development environment
+	${PIP} ${PIPFLAGS} install --upgrade pip
+	${PIP} ${PIPFLAGS} install --upgrade -e .
+	${PIP} ${PIPFLAGS} install --upgrade -e ".[dev]"
+	${PIP} ${PIPFLAGS} install --upgrade -e ".[tests]"
+	${PIP} ${PIPFLAGS} install --upgrade -e ".[lint]"
+	${PIP} ${PIPFLAGS} install --upgrade -e ".[docs]"
+
+
+.PHONY: help
 help:
-	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  html       to make standalone HTML files"
-	@echo "  dirhtml    to make HTML files named index.html in directories"
-	@echo "  singlehtml to make a single large HTML file"
-	@echo "  pickle     to make pickle files"
-	@echo "  json       to make JSON files"
-	@echo "  htmlhelp   to make HTML files and a HTML help project"
-	@echo "  qthelp     to make HTML files and a qthelp project"
-	@echo "  devhelp    to make HTML files and a Devhelp project"
-	@echo "  epub       to make an epub"
-	@echo "  latex      to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
-	@echo "  latexpdf   to make LaTeX files and run them through pdflatex"
-	@echo "  text       to make text files"
-	@echo "  man        to make manual pages"
-	@echo "  changes    to make an overview of all changed/added/deprecated items"
-	@echo "  linkcheck  to check all external links for integrity"
-	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+		sort | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-clean:
-	-rm -rf $(BUILDDIR)/*
-
-html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
-
-dirhtml:
-	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
-	@echo
-	@echo "Build finished. The HTML pages are in $(BUILDDIR)/dirhtml."
-
-singlehtml:
-	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
-	@echo
-	@echo "Build finished. The HTML page is in $(BUILDDIR)/singlehtml."
-
-pickle:
-	$(SPHINXBUILD) -b pickle $(ALLSPHINXOPTS) $(BUILDDIR)/pickle
-	@echo
-	@echo "Build finished; now you can process the pickle files."
-
-json:
-	$(SPHINXBUILD) -b json $(ALLSPHINXOPTS) $(BUILDDIR)/json
-	@echo
-	@echo "Build finished; now you can process the JSON files."
-
-htmlhelp:
-	$(SPHINXBUILD) -b htmlhelp $(ALLSPHINXOPTS) $(BUILDDIR)/htmlhelp
-	@echo
-	@echo "Build finished; now you can run HTML Help Workshop with the" \
-	      ".hhp project file in $(BUILDDIR)/htmlhelp."
-
-qthelp:
-	$(SPHINXBUILD) -b qthelp $(ALLSPHINXOPTS) $(BUILDDIR)/qthelp
-	@echo
-	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
-	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/pyzombie.qhcp"
-	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/pyzombie.qhc"
-
-devhelp:
-	$(SPHINXBUILD) -b devhelp $(ALLSPHINXOPTS) $(BUILDDIR)/devhelp
-	@echo
-	@echo "Build finished."
-	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/pyzombie"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/pyzombie"
-	@echo "# devhelp"
-
-epub:
-	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
-	@echo
-	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
-
-latex:
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
-	@echo
-	@echo "Build finished; the LaTeX files are in $(BUILDDIR)/latex."
-	@echo "Run \`make' in that directory to run these through (pdf)latex" \
-	      "(use \`make latexpdf' here to do that automatically)."
-
-latexpdf:
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
-	@echo "Running LaTeX files through pdflatex..."
-	make -C $(BUILDDIR)/latex all-pdf
-	@echo "pdflatex finished; the PDF files are in $(BUILDDIR)/latex."
-
-text:
-	$(SPHINXBUILD) -b text $(ALLSPHINXOPTS) $(BUILDDIR)/text
-	@echo
-	@echo "Build finished. The text files are in $(BUILDDIR)/text."
-
-man:
-	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(BUILDDIR)/man
-	@echo
-	@echo "Build finished. The manual pages are in $(BUILDDIR)/man."
-
-changes:
-	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
-	@echo
-	@echo "The overview file is in $(BUILDDIR)/changes."
-
-linkcheck:
-	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
-	@echo
-	@echo "Link check complete; look for any errors in the above output " \
-	      "or in $(BUILDDIR)/linkcheck/output.txt."
-
-doctest:
-	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
-	@echo "Testing of doctests in the sources finished, look at the " \
-	      "results in $(BUILDDIR)/doctest/output.txt."

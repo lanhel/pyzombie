@@ -3,7 +3,7 @@ pyzombie RESTful Resources
 ==========================
 
 
-:Author:    Lance Finn Helsten (helsten@acm.org)
+:Author:    Lance Finn Helsten <lanhel@flyingtitans.com>
 :Version:   0.0
 :Copyright: © 2010 Lance Finn Helsten, All Rights Reserved.
 :License:   Apache License, Version 2.0

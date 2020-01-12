@@ -1,27 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#-------------------------------------------------------------------------------
 """pyzombie HTTP RESTful server handler returning the representation of an
 executable."""
-__author__ = ('Lance Finn Helsten',)
-__version__ = '1.0.1'
+__author__ = ("Lance Finn Helsten",)
 __copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
 __license__ = """
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 __docformat__ = "reStructuredText en"
 
-__all__ = ['HandlerInstance']
+__all__ = ["HandlerInstance"]
 
 
 import sys
@@ -40,18 +38,20 @@ from ..Handler import Handler
 from ..Instance import Instance
 
 
-class HandlerInstance(Handler):    
+class HandlerInstance(Handler):
     @classmethod
     def dispatch(cls):
-        cls.initdispatch(r"""^/(?P<execname>\w+)/instances/(?P<instname>\w+)/?$""",
+        cls.initdispatch(
+            r"""^/(?P<execname>\w+)/instances/(?P<instname>\w+)/?$""",
             "GET,DELETE,OPTIONS,TRACE",
-            "/help/RESTful")
+            "/help/RESTful",
+        )
         return cls
-            
+
     def head(self):
         self.content = "Headers"
         self.get()
-    
+
     def get(self):
         name = self.urlargs["instname"]
         inst = Instance.getcached(self.executable, name)
@@ -77,8 +77,7 @@ class HandlerInstance(Handler):
                 self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
         else:
             self.error(http.client.NOT_FOUND)
-        
-    
+
     def delete(self):
         name = self.urlargs["instname"]
         if name in self.executable.instances:
@@ -88,8 +87,7 @@ class HandlerInstance(Handler):
             self.flush()
         else:
             self.error(http.client.NOT_FOUND)
-        
-    
+
     def representation_html(self, inst, fp):
         """Create an HTML representation of the instance.
         
@@ -121,9 +119,11 @@ class HandlerInstance(Handler):
     </ul>
 </body>
 </html>
-""".format(**inststate)
+""".format(
+            **inststate
+        )
         fp.write(html)
-    
+
     def representation_json(self, inst, fp):
         """Create a JSON representation of the instance.
         
@@ -134,7 +134,7 @@ class HandlerInstance(Handler):
         """
         state = inst.state(self.serverurl(path=""), urlpath="instances")
         json.dump(state, fp, sort_keys=True, indent=4)
-    
+
     def representation_yaml(self, inst, fp):
         """Create a YAML representation of the instance.
         
@@ -149,4 +149,3 @@ class HandlerInstance(Handler):
             instance name.
         """
         state = inst.state(self.serverurl(path=""), urlpath="instances")
-

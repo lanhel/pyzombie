@@ -1,26 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#-------------------------------------------------------------------------------
 """pyzombie HTTP RESTful server."""
-__author__ = ('Lance Finn Helsten',)
-__version__ = '1.0.1'
+__author__ = ("Lance Finn Helsten",)
 __copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
 __license__ = """
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 __docformat__ = "reStructuredText en"
 
 import sys
+
 if sys.version_info < (3, 0):
     raise Exception("pyzombie requires Python 3.0 or higher.")
 import os
@@ -60,8 +59,12 @@ class InstancePropertiesNoRunTest(unittest.TestCase):
         self.assertLess(self.inst.start, datetime.utcnow())
         self.assertIsNone(self.inst.end)
         self.assertIsNone(self.inst.returncode)
-        self.assertEqual(self.inst.stdout_path, os.path.join(self.inst_dir, "stdout.txt"))
-        self.assertEqual(self.inst.stderr_path, os.path.join(self.inst_dir, "stderr.txt"))
+        self.assertEqual(
+            self.inst.stdout_path, os.path.join(self.inst_dir, "stdout.txt")
+        )
+        self.assertEqual(
+            self.inst.stderr_path, os.path.join(self.inst_dir, "stderr.txt")
+        )
         self.assertIsNotNone(self.inst.stdin)
         self.assertIsNotNone(self.inst.stdout)
         self.assertIsNotNone(self.inst.stderr)
@@ -74,9 +77,13 @@ class InstanceCLITest(unittest.TestCase):
         self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
         self.ex.writeimage(open(TestSourceCLI.__file__, "r"))
         self.inst_name = Instance.createname()
-        self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)        
-        self.inst = Instance(self.ex, self.inst_name,
-                arguments=TestSourceCLI.ARGV, environ=TestSourceCLI.ENVIRON)
+        self.inst_dir = os.path.join(self.ex.dirpath, self.inst_name)
+        self.inst = Instance(
+            self.ex,
+            self.inst_name,
+            arguments=TestSourceCLI.ARGV,
+            environ=TestSourceCLI.ENVIRON,
+        )
 
     def tearDown(self):
         self.ex.delete()
@@ -87,19 +94,26 @@ class InstanceCLITest(unittest.TestCase):
         self.assertLess(self.inst.start, datetime.utcnow())
         self.assertIsNone(self.inst.end)
         self.assertIsNone(self.inst.returncode)
-        self.assertEqual(self.inst.stdout_path, os.path.join(self.inst_dir, "stdout.txt"))
-        self.assertEqual(self.inst.stderr_path, os.path.join(self.inst_dir, "stderr.txt"))
+        self.assertEqual(
+            self.inst.stdout_path, os.path.join(self.inst_dir, "stdout.txt")
+        )
+        self.assertEqual(
+            self.inst.stderr_path, os.path.join(self.inst_dir, "stderr.txt")
+        )
         self.assertIsNotNone(self.inst.stdin)
         self.assertIsNotNone(self.inst.stdout)
         self.assertIsNotNone(self.inst.stderr)
-        
+
         self.inst.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
         self.inst.stdin.flush()
         self.inst.stdin.close()
         self.assertNotEqual(0, self.inst.process.pid, "Process not started.")
         returncode = self.inst.process.wait()
         sleep(DELTA_T)
-        TestSourceCLI.validateResults(self,
-                "{0}_{1}".format(self.ex.name, self.inst_name),
-                self.inst.returncode, self.inst.stdout, self.inst.stderr)
-
+        TestSourceCLI.validateResults(
+            self,
+            "{0}_{1}".format(self.ex.name, self.inst_name),
+            self.inst.returncode,
+            self.inst.stdout,
+            self.inst.stderr,
+        )

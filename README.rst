@@ -31,6 +31,7 @@ pyzombie
    :target: https://github.com/lanhel/pyzombie/releases
 
 
+.. docs index include start
 
 This is an HTTP RESTful server that will allow arbitrary code to
 be executed on a remote host. The principle purpose is to allow
@@ -44,6 +45,7 @@ that have no direct network presence.
     unauthorized access.
 
 
+.. docs index include start
 
 .. |date| date:: %Y-%m-%d %H:%M:%S %Z
 .. footer::

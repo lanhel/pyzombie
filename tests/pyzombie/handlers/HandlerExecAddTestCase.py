@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#-------------------------------------------------------------------------------
 """pyzombie HTTP RESTful handler test cases."""
-__author__ = ('Lance Finn Helsten',)
-__version__ = '1.0.1'
+__author__ = ("Lance Finn Helsten",)
 __copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
 __license__ = """
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 __docformat__ = "reStructuredText en"
 
@@ -36,7 +34,7 @@ from HTTPResponse import HTTPResponse
 class HandlerExecAddGetTest(unittest.TestCase):
     def runTest(self):
         req = MockRequest()
-        hndlr = HandlerExecAdd(req, {'execname':self.__class__.__name__})
+        hndlr = HandlerExecAdd(req, {"execname": self.__class__.__name__})
         hndlr.get()
 
         resp = HTTPResponse(req.wfile.getvalue())
@@ -47,8 +45,7 @@ class HandlerExecAddGetTest(unittest.TestCase):
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
 
 
-class HandlerExecAddPostTest(unittest.TestCase):    
-    
+class HandlerExecAddPostTest(unittest.TestCase):
     def setUp(self):
         self.image = """{0} Test Image""".format(self.__class__.__name__)
         self.boundary = """NoBodyExpectsTheSpanishInquisition"""
@@ -65,22 +62,24 @@ Add
 --{0}--
 
 
-""".format(self.boundary, self.__class__.__name__, self.image)
-        self.form = self.form.replace(os.linesep, '\r\n')
+""".format(
+            self.boundary, self.__class__.__name__, self.image
+        )
+        self.form = self.form.replace(os.linesep, "\r\n")
         self.form = self.form.encode("UTF-8")
 
     def runTest(self):
         req = MockRequest()
         req.readbuf = io.BytesIO(self.form)
-        req.headers["Content-Type"] = "multipart/form-data; boundary={0}".format(self.boundary)
+        req.headers["Content-Type"] = "multipart/form-data; boundary={0}".format(
+            self.boundary
+        )
         req.headers["Content-Length"] = str(len(self.form))
         hndlr = HandlerExecAdd(req, {})
         hndlr.post()
-        
-        resp = HTTPResponse(req.wfile.getvalue())        
+
+        resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
         self.assertEqual(resp.code, str(http.client.CREATED))
         self.ex = Executable.getcached(hndlr.executable.name)
-        self.assertEqual(str(open(self.ex.binpath, 'rb').read(), "UTF-8"), self.image)
-        
-    
+        self.assertEqual(str(open(self.ex.binpath, "rb").read(), "UTF-8"), self.image)

@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#-------------------------------------------------------------------------------
 """pyzombie HTTP RESTful handler test cases."""
-__author__ = ('Lance Finn Helsten',)
-__version__ = '1.0.1'
+__author__ = ("Lance Finn Helsten",)
 __copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
 __license__ = """
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 __docformat__ = "reStructuredText en"
 
@@ -39,7 +37,7 @@ import TestSourceCLI
 class HandlerExecStartGetTest(unittest.TestCase):
     def runTest(self):
         req = MockRequest()
-        hndlr = HandlerExecStart(req, {'execname':self.__class__.__name__})
+        hndlr = HandlerExecStart(req, {"execname": self.__class__.__name__})
         hndlr.get()
 
         resp = HTTPResponse(req.wfile.getvalue())
@@ -50,17 +48,18 @@ class HandlerExecStartGetTest(unittest.TestCase):
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
 
 
-class HandlerExecStartPostTest(unittest.TestCase):    
-    
+class HandlerExecStartPostTest(unittest.TestCase):
     def setUp(self):
-        self.ex = Executable.getcached(self.__class__.__name__, mediatype="text/x-python")
+        self.ex = Executable.getcached(
+            self.__class__.__name__, mediatype="text/x-python"
+        )
         self.ex.writeimage(open(TestSourceCLI.__file__, "r"))
         self.boundary = """NoBodyExpectsTheSpanishInquisition"""
         environ = TestSourceCLI.ENVIRON
         environ = ["{0} = {1}".format(k, environ[k]) for k in environ.keys()]
         environ = os.linesep.join(environ)
         argv = TestSourceCLI.ARGV
-        argv = ' '.join(argv)
+        argv = " ".join(argv)
         self.form = """
 --{0}
 Content-Disposition: form-data; name="environ"
@@ -73,19 +72,23 @@ Content-Disposition: form-data; name="arguments"
 --{0}--
 
 
-""".format(self.boundary, environ, argv)
-        self.form = self.form.replace(os.linesep, '\r\n')
+""".format(
+            self.boundary, environ, argv
+        )
+        self.form = self.form.replace(os.linesep, "\r\n")
         self.form = self.form.encode("UTF-8")
 
     def runTest(self):
         req = MockRequest()
         req.readbuf = io.BytesIO(self.form)
-        req.headers["Content-Type"] = "multipart/form-data; boundary={0}".format(self.boundary)
+        req.headers["Content-Type"] = "multipart/form-data; boundary={0}".format(
+            self.boundary
+        )
         req.headers["Content-Length"] = str(len(self.form))
-        hndlr = HandlerExecStart(req, {'execname':self.ex.name})
+        hndlr = HandlerExecStart(req, {"execname": self.ex.name})
         hndlr.post()
-        
-        resp = HTTPResponse(req.wfile.getvalue())        
+
+        resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
         self.assertEqual(resp.code, str(http.client.CREATED))
 
@@ -96,9 +99,7 @@ Content-Disposition: form-data; name="arguments"
         hndlr.inst.stdin.close()
         self.assertTrue(os.path.isdir(hndlr.inst.datadir))
         while hndlr.inst.process.returncode is None:
-            sleep(DELTA_T)               
-        TestSourceCLI.validateResults(self, self.__class__.__name__, 0,
-            hndlr.inst.stdout, hndlr.inst.stderr)
-        
-        
-    
+            sleep(DELTA_T)
+        TestSourceCLI.validateResults(
+            self, self.__class__.__name__, 0, hndlr.inst.stdout, hndlr.inst.stderr
+        )

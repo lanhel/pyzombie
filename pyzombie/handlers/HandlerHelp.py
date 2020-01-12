@@ -1,26 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#-------------------------------------------------------------------------------
 """pyzombie HTTP RESTful server handler for root resource."""
-__author__ = ('Lance Finn Helsten',)
-__version__ = '1.0.1'
+__author__ = ("Lance Finn Helsten",)
 __copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
 __license__ = """
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 __docformat__ = "reStructuredText en"
 
-__all__ = ['HandlerHelp']
+__all__ = ["HandlerHelp"]
 
 import sys
 import os
@@ -28,7 +26,6 @@ import logging
 import http.client
 import http.server
 from ..Handler import Handler
-
 
 
 HELPDIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "../httphelp"))
@@ -53,24 +50,28 @@ INDEX_HTML = """<!DOCTYPE html>
 
 INDEX_ROW = """    <li><a href="help/{0}">{0}</a></li>"""
 
+
 class HandlerHelp(Handler):
     """Handle the root resource."""
 
     @classmethod
     def dispatch(cls):
-        cls.initdispatch(r"""^/help(/(?P<helpfile>\w+(\.\w+)?)?)?$""",
-            "GET,OPTIONS,TRACE", "/help/RESTful")
+        cls.initdispatch(
+            r"""^/help(/(?P<helpfile>\w+(\.\w+)?)?)?$""",
+            "GET,OPTIONS,TRACE",
+            "/help/RESTful",
+        )
         return cls
-                
+
     def head(self):
         self.content = "Headers"
         self.get()
-    
+
     def get(self):
         html = None
         if self.urlargs["helpfile"] is None:
             files = [os.path.splitext(f) for f in os.listdir(HELPDIR)]
-            files = [INDEX_ROW.format(f[0]) for f in files if f[1] == '.html']
+            files = [INDEX_ROW.format(f[0]) for f in files if f[1] == ".html"]
             body = os.linesep.join(files)
             html = INDEX_HTML.format(body)
             self.status = http.client.OK
@@ -78,8 +79,8 @@ class HandlerHelp(Handler):
             self["Last-Modified"] = self.startstamprfc850
             self["Content-type"] = "text/html;UTF-8"
             self.writelines(html)
-        elif os.path.splitext(self.urlargs["helpfile"])[1] == '':
-            file = os.path.join(HELPDIR, self.urlargs["helpfile"] + '.html')
+        elif os.path.splitext(self.urlargs["helpfile"])[1] == "":
+            file = os.path.join(HELPDIR, self.urlargs["helpfile"] + ".html")
             file = os.path.normpath(file)
             self.writefile(file)
         else:
@@ -87,7 +88,3 @@ class HandlerHelp(Handler):
             file = os.path.normpath(file)
             self.writefile(file)
         self.flush()
-
-
-
-

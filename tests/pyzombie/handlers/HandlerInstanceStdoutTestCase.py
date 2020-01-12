@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-#-------------------------------------------------------------------------------
 """pyzombie HTTP RESTful handler test cases."""
-__author__ = ('Lance Finn Helsten',)
-__version__ = '1.0.1'
+__author__ = ("Lance Finn Helsten",)
 __copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
 __license__ = """
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 """
 __docformat__ = "reStructuredText en"
 
@@ -32,16 +30,17 @@ from time import sleep
 import http.client
 from pyzombie.Executable import Executable
 from pyzombie.Instance import Instance, DELTA_T
-from pyzombie.handlers import HandlerInstanceStderr
+from pyzombie.handlers import HandlerInstanceStdout
 from MockRequest import MockRequest
 from HTTPResponse import HTTPResponse
 import TestSourceCopy
 
-BUFFER = [random.randint(ord(' '), ord('~')) for i in range(4096)]
+BUFFER = [random.randint(ord(" "), ord("~")) for i in range(4096)]
 BUFFER = [chr(i) for i in BUFFER]
-BUFFER = ''.join(BUFFER)
+BUFFER = "".join(BUFFER)
 
-class StdinFeeder():
+
+class StdinFeeder:
     def __call__(self, *args, **kwargs):
         test = kwargs["Test"]
         test.inst.stdin.write(BUFFER.encode("UTF-8"))
@@ -49,27 +48,33 @@ class StdinFeeder():
         test.inst.stdin.close()
 
 
-class HandlerInstanceStderrGetTest(unittest.TestCase):
+class HandlerInstanceStdoutGetTest(unittest.TestCase):
     def setUp(self):
         self.ex = Executable.getcached(__name__, mediatype="text/x-python")
         self.ex.writeimage(open(TestSourceCopy.__file__, "r"))
         self.inst = Instance(self.ex, self.__class__.__name__)
-        self.thread = threading.Thread(target=StdinFeeder(), kwargs={"Test":self})
+        self.thread = threading.Thread(target=StdinFeeder(), kwargs={"Test": self})
         self.daemon = True
         self.thread.start()
 
     def tearDown(self):
         self.thread.join(0.5)
+
     #    self.ex.delete()
-    
-    
+
     def makeRequest(self, chunked=False):
         req = MockRequest()
-        req.headers["Accept"] = "spam/eggs; q=1.0, application/json; q=0.5, text/html;q=0.1, text/plain"
+        req.headers[
+            "Accept"
+        ] = "spam/eggs; q=1.0, application/json; q=0.5, text/html;q=0.1, text/plain"
 
-        hndlr = HandlerInstanceStderr(req, {'execname':__name__, 'instname':self.__class__.__name__})
-        self.assertEqual(hndlr.executable, self.ex)        
-        urlself = hndlr.serverurl(path="{0}/instances/{1}/stderr".format(__name__, self.__class__.__name__))
+        hndlr = HandlerInstanceStdout(
+            req, {"execname": __name__, "instname": self.__class__.__name__}
+        )
+        self.assertEqual(hndlr.executable, self.ex)
+        urlself = hndlr.serverurl(
+            path="{0}/instances/{1}/stdout".format(__name__, self.__class__.__name__)
+        )
         hndlr.get()
 
         resp = HTTPResponse(req.wfile.getvalue())
@@ -81,6 +86,4 @@ class HandlerInstanceStderrGetTest(unittest.TestCase):
 
     def runTest(self):
         resp = self.makeRequest()
-        self.assertEqual(resp.body, "1: {0}\n".format(BUFFER[:10]))
-
-        
+        self.assertEqual(resp.body, BUFFER)
