@@ -29,7 +29,7 @@ from setuptools_scm import get_version
 from MockServer import MockServer
 
 
-class MockHeaders:
+class MockHeaders(dict):
     """Handles the case insensitive nature of HTTP headers."""
 
     def __init__(self):

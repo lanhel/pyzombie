@@ -379,7 +379,7 @@ class Instance:
             if state["end"]:
                 self.__end = datetime.strptime(state["end"], self.DATETIME_FMT)
             else:
-                self.__end = datetime.utcnow().strftime(self.DATETIME_FMT)
+                self.__end = datetime.utcnow()
 
             if state["returncode"] is not None:
                 self.__returncode = int(state["returncode"])

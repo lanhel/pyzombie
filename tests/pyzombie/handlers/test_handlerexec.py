@@ -42,7 +42,8 @@ class HandlerExecGetTest(unittest.TestCase):
         self.ex.writeimage(io.StringIO(IMAGE))
 
     def tearDown(self):
-        self.ex.delete()
+        if not self._outcome.errors:
+            self.ex.delete()
 
     def runTest(self):
         req = MockRequest()
@@ -51,7 +52,7 @@ class HandlerExecGetTest(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(int(resp.code), HTTPStatus.OK.value)
+        self.assertEqual(resp.code, HTTPStatus.OK.value)
         self.assertEqual(resp.header["Content-Type"], "text/x-python")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
@@ -65,7 +66,8 @@ class HandlerExecPutTest(unittest.TestCase):
         self.ex.writeimage(io.StringIO(IMAGE))
 
     def tearDown(self):
-        self.ex.delete()
+        if not self._outcome.errors:
+            self.ex.delete()
 
     def testValid(self):
         req = MockRequest()
@@ -78,7 +80,7 @@ class HandlerExecPutTest(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, str(http.client.OK))
+        self.assertEqual(resp.code, HTTPStatus.OK.value)
         self.assertEqual(open(self.ex.binpath, "rb").read(), self.DATA)
 
     def testInvalidMediaType(self):
@@ -91,7 +93,7 @@ class HandlerExecPutTest(unittest.TestCase):
         hndlr.put()
 
         resp = HTTPResponse(req.wfile.getvalue())
-        self.assertEqual(resp.code, str(http.client.UNSUPPORTED_MEDIA_TYPE))
+        self.assertEqual(resp.code, HTTPStatus.UNSUPPORTED_MEDIA_TYPE.value)
 
 
 class HandlerExecDeleteTest(unittest.TestCase):
@@ -102,7 +104,8 @@ class HandlerExecDeleteTest(unittest.TestCase):
         self.ex.writeimage(io.StringIO(IMAGE))
 
     def tearDown(self):
-        self.ex.delete()
+        if not self._outcome.errors:
+            self.ex.delete()
 
     def runTest(self):
         req = MockRequest()
@@ -111,6 +114,6 @@ class HandlerExecDeleteTest(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, str(http.client.OK))
+        self.assertEqual(resp.code, HTTPStatus.OK.value)
 
         self.assertFalse(os.path.isdir(self.ex.dirpath))

@@ -22,6 +22,7 @@ __docformat__ = "reStructuredText en"
 import sys
 import unittest
 import io
+from http import HTTPStatus
 from pyzombie.handlers import HandlerLeftovers
 from MockRequest import MockRequest
 from HTTPResponse import HTTPResponse
@@ -35,8 +36,8 @@ class HandlerLeftoversGetTest(unittest.TestCase):
         resp = HTTPResponse(req.wfile.getvalue())
 
         self.assertEqual("HTTP/1.1", resp.protocol)
-        self.assertEqual("200", resp.code)
-        self.assertEqual("OK", resp.message)
+        self.assertEqual(HTTPStatus.OK.value, resp.code)
+        self.assertEqual(HTTPStatus.OK.phrase, resp.message)
         self.assertEqual("text/html;UTF-8", resp.header["Content-Type"])
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
@@ -50,8 +51,8 @@ class HandlerLeftoversGetFaviconTest(unittest.TestCase):
         resp = HTTPResponse(req.wfile.getvalue())
 
         self.assertEqual("HTTP/1.1", resp.protocol)
-        self.assertEqual("200", resp.code)
-        self.assertEqual("OK", resp.message)
+        self.assertEqual(HTTPStatus.OK.value, resp.code)
+        self.assertEqual(HTTPStatus.OK.phrase, resp.message)
         self.assertEqual("image/x-icon", resp.header["Content-Type"])
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
@@ -64,5 +65,5 @@ class HandlerLeftoversBadGetTest(unittest.TestCase):
         hndlr.get()
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual("HTTP/1.1", resp.protocol)
-        self.assertEqual("404", resp.code)
-        self.assertEqual("Not Found", resp.message)
+        self.assertEqual(HTTPStatus.NOT_FOUND.value, resp.code)
+        self.assertEqual(HTTPStatus.NOT_FOUND.phrase, resp.message)

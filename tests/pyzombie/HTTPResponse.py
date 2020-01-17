@@ -31,6 +31,7 @@ class HTTPResponse:
         # tio = io.StringIO(self.strrep)
 
         self.protocol, self.code, self.message = self.__readline().strip().split(" ", 2)
+        self.code = int(self.code)
         self.header = {}
         self.__readheaders()
 
@@ -38,11 +39,10 @@ class HTTPResponse:
             "Transfer-Encoding" in self.header
             and self.header["Transfer-Encoding"] == "chunked"
         ):
-            self.body = ""
+            self.body = b""
             chunksize = int(self.__readline().strip(), 16)
             while chunksize > 0:
                 chunk = self.bio.read(chunksize)
-                chunk = str(chunk, "UTF-8")
                 self.body = self.body + chunk
                 chunkend = self.__readline()
                 chunksize = self.__readline().strip()

@@ -36,7 +36,8 @@ class ExecutableBase(unittest.TestCase):
         self.ex = Executable(self.__class__.__name__, mediatype="text/x-python")
 
     def tearDown(self):
-        self.ex.delete()
+        if not self._outcome.errors:
+            self.ex.delete()
 
 
 class ExecutablePropertiesTest(ExecutableBase):
@@ -63,12 +64,23 @@ class ExecutablePropertiesTest(ExecutableBase):
         self.assertEqual(("text/x-python", None), self.ex.mediatype)
 
 
-class ExecutableIOTest(ExecutableBase):
+class ExecutableStringIOTest(ExecutableBase):
     """Check that the executable image is correctly saved."""
 
     def runTest(self):
         val = "Hello world"
         buf = io.StringIO()
         self.ex.writeimage(io.StringIO(val))
+        self.ex.readimage(buf)
+        self.assertEqual(val, buf.getvalue())
+
+
+class ExecutableBytesIOTest(ExecutableBase):
+    """Check that the executable image is correctly saved."""
+
+    def runTest(self):
+        val = b"Hello world"
+        buf = io.BytesIO()
+        self.ex.writeimage(io.BytesIO(val))
         self.ex.readimage(buf)
         self.assertEqual(val, buf.getvalue())

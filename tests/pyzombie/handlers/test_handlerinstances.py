@@ -27,6 +27,8 @@ import json
 import unittest
 from time import sleep
 import http.client
+from http import HTTPStatus
+from setuptools_scm import get_version
 from pyzombie.Executable import Executable
 from pyzombie.Instance import Instance, DELTA_T
 from pyzombie.handlers import HandlerInstance
@@ -48,7 +50,8 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
         self.inst.stdin.write(TestSourceCLI.STDIN.encode("UTF-8"))
 
     def tearDown(self):
-        self.ex.delete()
+        if not self._outcome.errors:
+            self.inst.delete()
 
     def makeRequest(self):
         req = MockRequest()
@@ -67,22 +70,22 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, str(http.client.OK))
+        self.assertEqual(resp.code, HTTPStatus.OK.value)
         self.assertEqual(resp.header["Content-Type"], "application/json")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
 
         state = json.load(io.StringIO(str(resp.body, "UTF-8")))
-        self.assertEqual(state["version"], __version__)
+        self.assertEqual(state["version"], get_version())
         self.assertEqual(state["self"], urlself)
         self.assertEqual(state["stdin"], urlself + "/stdin")
         self.assertEqual(state["stdout"], urlself + "/stdout")
         self.assertEqual(state["stderr"], urlself + "/stderr")
-        self.assertEquals(state["returncode"], self.inst.returncode)
-        self.assertEquals(
+        self.assertEqual(state["returncode"], self.inst.returncode)
+        self.assertEqual(
             state["start"], self.inst.start.strftime("%Y-%m-%dT%H:%M:%SZ")
         )
-        self.assertEquals(
+        self.assertEqual(
             state["remove"], self.inst.remove.strftime("%Y-%m-%dT%H:%M:%SZ")
         )
 
@@ -110,7 +113,7 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
         ### Recheck the response for a completed process
         ###
         req, hndlr, state = self.makeRequest()
-        self.assertEquals(state["end"], self.inst.end.strftime("%Y-%m-%dT%H:%M:%SZ"))
+        self.assertEqual(state["end"], self.inst.end.strftime("%Y-%m-%dT%H:%M:%SZ"))
         TestSourceCLI.validateResults(
             self,
             self.inst.name,
@@ -118,8 +121,8 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
             self.inst.stdout,
             self.inst.stderr,
         )
-        self.assertEquals(state["environ"], environ)
-        self.assertEquals(state["arguments"], argv)
+        self.assertEqual(state["environ"], environ)
+        self.assertEqual(state["arguments"], argv)
 
 
 class HandlerInstanceDeleteTest(unittest.TestCase):
@@ -145,5 +148,5 @@ class HandlerInstanceDeleteTest(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, str(http.client.OK))
+        self.assertEqual(resp.code, HTTPStatus.OK.value)
         self.assertFalse(os.path.isdir(self.inst.datadir))

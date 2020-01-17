@@ -22,6 +22,7 @@ __all__ = ["Executable"]
 
 import sys
 import os
+import io
 import stat
 import shutil
 from datetime import datetime
@@ -32,7 +33,7 @@ from .ZombieConfig import config, datadir
 
 class Executable:
     """This represents a single executable within the system.
-    
+
     Properties
     ----------
     name
@@ -113,9 +114,11 @@ class Executable:
 
     def readimage(self, fp):
         """Read te image from the persistant store into the file object."""
-        execfile = open(self.binpath, "r")
+        execfile = open(self.binpath, "rb")
         databuf = execfile.read(4096)
         while databuf:
+            if isinstance(fp, io.TextIOBase):
+                databuf = str(databuf, encoding='utf-8')
             fp.write(databuf)
             databuf = fp.read(4096)
         fp.flush()
@@ -123,9 +126,11 @@ class Executable:
 
     def writeimage(self, fp):
         """Write the image from the file object to the persistant store."""
-        execfile = open(self.binpath, "w")
+        execfile = open(self.binpath, "wb")
         databuf = fp.read(4096)
         while databuf:
+            if isinstance(databuf, str):
+                databuf = bytes(databuf, encoding='utf-8')
             execfile.write(databuf)
             databuf = fp.read(4096)
         execfile.flush()

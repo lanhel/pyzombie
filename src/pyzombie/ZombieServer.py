@@ -41,10 +41,10 @@ from .ZombieConfig import config, CONFIG_INIT
 ###
 class ZombieServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     """Create a new ZombieServer to handle RESTful HTTP requests.
-    
+
     This is built on `http.server.HTTPServer`_ so all HTTP requirements
     are handled correctly.
-    
+
     :param configfile: Path to the server's configuration file.
     :param loglevel: The default log level for the new server.
     """

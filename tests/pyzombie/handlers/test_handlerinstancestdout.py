@@ -28,6 +28,7 @@ import threading
 import unittest
 from time import sleep
 import http.client
+from http import HTTPStatus
 from pyzombie.Executable import Executable
 from pyzombie.Instance import Instance, DELTA_T
 from pyzombie.handlers import HandlerInstanceStdout
@@ -59,8 +60,8 @@ class HandlerInstanceStdoutGetTest(unittest.TestCase):
 
     def tearDown(self):
         self.thread.join(0.5)
-
-    #    self.ex.delete()
+        if not self._outcome.errors:
+            self.inst.delete()
 
     def makeRequest(self, chunked=False):
         req = MockRequest()
@@ -79,11 +80,12 @@ class HandlerInstanceStdoutGetTest(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, str(http.client.OK))
+        self.assertEqual(resp.code, HTTPStatus.OK.value)
         self.assertEqual(resp.header["Content-Type"], "text/plain;UTF-8")
         self.assertEqual(resp.md5, resp.header["ETag"])
         return resp
 
     def runTest(self):
         resp = self.makeRequest()
-        self.assertEqual(resp.body, BUFFER)
+        body = str(resp.body, encoding="utf-8")
+        self.assertEqual(body, BUFFER)

@@ -24,6 +24,7 @@ import os
 import io
 import re
 import unittest
+from http import HTTPStatus
 from pyzombie.handlers import HandlerExecSet
 from MockRequest import MockRequest
 from HTTPResponse import HTTPResponse
@@ -37,8 +38,8 @@ class HandlerExecSetGetEmptyTest(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, "200")
-        self.assertEqual(resp.message, "OK")
+        self.assertEqual(resp.code, HTTPStatus.OK.value)
+        self.assertEqual(resp.message, HTTPStatus.OK.phrase)
         self.assertEqual(resp.header["Content-Type"], "text/html;UTF-8")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
@@ -60,12 +61,12 @@ class HandlerExecSetPostTest(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, "201")
-        self.assertEqual(resp.message, "Created")
-        self.assertRegexpMatches(resp.header["Location"], self.LOC_RE)
+        self.assertEqual(resp.code, HTTPStatus.CREATED.value)
+        self.assertEqual(resp.message, HTTPStatus.CREATED.phrase)
+        self.assertRegex(resp.header["Location"], self.LOC_RE)
         self.assertEqual(int(resp.header["Content-Length"]), 0)
 
         file = re.match(self.LOC_RE, resp.header["Location"]).group(1)
         self.assertTrue(os.path.isdir(hndlr.executable.dirpath))
         self.assertTrue(os.path.isfile(hndlr.executable.binpath))
-        self.assertEquals(open(hndlr.executable.binpath, "rb").read(), data)
+        self.assertEqual(open(hndlr.executable.binpath, "rb").read(), data)

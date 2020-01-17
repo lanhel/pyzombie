@@ -52,7 +52,7 @@ DISPATCH_TABLE = [
 
 class ZombieRequest(http.server.BaseHTTPRequestHandler):
     """Extension of HTTP request handler to dispatch on Zombie verbs.
-    
+
     :param request: The request to process.
     :param client_address: Tuple of the form ``(host, port)`` referring to
         the client’s address.
@@ -78,7 +78,7 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
     def dispatch(self, method):
         """Determine the handler for the particular resource pattern and
         dispatch to that handler.
-        
+
         Parameters
         ----------
         method

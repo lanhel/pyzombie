@@ -52,7 +52,7 @@ FLUSHED = "Flushed"
 
 class Handler:
     """Holds all the information necessary to handle a single resource dispatch.
-    
+
     Properties
     ----------
     executable
@@ -180,12 +180,12 @@ class Handler:
 
     def serverurl(self, path):
         """Given a path to a resource create a full URL to that resource.
-        
+
         Parameters
         ----------
         path
             The relative path on the server to the resource.
-        
+
         Return
         ------
         The URL that can be given to this server to find the given resource.
@@ -233,10 +233,10 @@ class Handler:
         stream. This will write all the headers before the file. If there is
         an error reading the file then the appropriate HTTP error code will
         be sent.
-        
+
         This is meant for static files. Dynamic files should use writeline
         or writelines to operate.
-        
+
         Parameters
         ----------
         path
@@ -252,7 +252,7 @@ class Handler:
         """Read from the given file object and write the data to the output
         stream. If this is chunked then this will not return until the input
         file object is closed.
-        
+
         Parameters
         ----------
         fp

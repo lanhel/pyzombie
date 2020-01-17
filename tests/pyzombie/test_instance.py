@@ -46,7 +46,8 @@ class InstancePropertiesNoRunTest(unittest.TestCase):
         self.inst = Instance(self.ex, self.inst_name)
 
     def tearDown(self):
-        self.ex.delete()
+        if not self._outcome.errors:
+            self.ex.delete()
 
     def runTest(self):
         self.assertEqual(self.inst.datadir, self.inst_dir)
@@ -86,7 +87,8 @@ class InstanceCLITest(unittest.TestCase):
         )
 
     def tearDown(self):
-        self.ex.delete()
+        if not self._outcome.errors:
+            self.ex.delete()
 
     def runTest(self):
         self.assertEqual(self.inst.datadir, self.inst_dir)

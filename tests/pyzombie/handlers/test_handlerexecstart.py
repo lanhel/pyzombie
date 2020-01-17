@@ -26,6 +26,7 @@ import re
 import unittest
 from time import sleep
 import http.client
+from http import HTTPStatus
 from pyzombie.Executable import Executable
 from pyzombie.Instance import DELTA_T
 from pyzombie.handlers import HandlerExecStart
@@ -42,7 +43,7 @@ class HandlerExecStartGetTest(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, str(http.client.OK))
+        self.assertEqual(resp.code, HTTPStatus.OK.value)
         self.assertEqual(resp.header["Content-Type"], "text/html;UTF-8")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
@@ -90,7 +91,7 @@ Content-Disposition: form-data; name="arguments"
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, str(http.client.CREATED))
+        self.assertEqual(resp.code, HTTPStatus.CREATED.value)
 
         self.assertIsNotNone(hndlr.inst.process)
         self.assertIsNone(hndlr.inst.process.returncode)

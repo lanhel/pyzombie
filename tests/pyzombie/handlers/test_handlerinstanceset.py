@@ -24,6 +24,7 @@ import os
 import io
 import re
 import unittest
+from http import HTTPStatus
 from time import sleep
 from pyzombie.Executable import Executable
 from pyzombie.Instance import DELTA_T
@@ -41,8 +42,8 @@ class HandlerInstanceSetGetEmpty(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, "200")
-        self.assertEqual(resp.message, "OK")
+        self.assertEqual(resp.code, HTTPStatus.OK.value)
+        self.assertEqual(resp.message,HTTPStatus.OK.phrase)
         self.assertEqual(resp.header["Content-Type"], "text/html;UTF-8")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
@@ -51,11 +52,9 @@ class HandlerInstanceSetGetEmpty(unittest.TestCase):
 class HandlerInstanceSetPostJson(unittest.TestCase):
     def setUp(self):
         self.loc_re = (
-            r"http://MockServer:8008/"
-            + "("
+            r"http://MockServer:8008/("
             + self.__class__.__name__
-            + ")"
-            + "/instances/(run_\d{7}T\d{6}Z?)"
+            + r")/instances/(run_\d{7}T\d{6}Z?)"
         )
         self.ex = Executable.getcached(
             self.__class__.__name__, mediatype="text/x-python"
@@ -63,7 +62,8 @@ class HandlerInstanceSetPostJson(unittest.TestCase):
         self.ex.writeimage(open(TestSourceCLI.__file__, "r"))
 
     def tearDown(self):
-        self.ex.delete()
+        if not self._outcome.errors:
+            self.ex.delete()
 
     def runTest(self):
         data = TestSourceCLI.restful_json()
@@ -77,9 +77,9 @@ class HandlerInstanceSetPostJson(unittest.TestCase):
 
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
-        self.assertEqual(resp.code, "201")
-        self.assertEqual(resp.message, "Created")
-        self.assertRegexpMatches(resp.header["Location"], self.loc_re)
+        self.assertEqual(resp.code, HTTPStatus.CREATED.value)
+        self.assertEqual(resp.message,HTTPStatus.CREATED.phrase)
+        self.assertRegex(resp.header["Location"], self.loc_re)
         self.assertEqual(int(resp.header["Content-Length"]), 0)
 
         match = re.match(self.loc_re, resp.header["Location"])

@@ -16,7 +16,10 @@ __license__ = """
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
 from setuptools import setup
+import build_docutils
 
-setup(use_scm_version=True)
+setup(
+    use_scm_version=True,
+    cmdclass=build_docutils.cmdclass()
+)
