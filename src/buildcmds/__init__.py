@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-"""pyzombie project setup."""
-__author__ = ("Lance Finn Helsten",)
+"""Setuptools buildcmd package."""
 __copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
 __license__ = """
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,16 +15,17 @@ __license__ = """
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from setuptools import setup, Command
 
 
-def commands():
-    try:
-        import buildcmds
+def cmdclass():
+    """Return dictionary suitable for setup ``cmdclass`` parameter."""
+    from distutils.command.build import build as build_orig
+    from .build_html import build_html, has_rest_docs
 
-        return buildcmds.cmdclass()
-    except ModuleNotFoundError:
-        return {}
+    commands = build_orig.sub_commands
+    commands.append(("build_html", has_rest_docs))
 
+    class build(build_orig):
+        sub_commands = commands
 
-setup(use_scm_version=True, cmdclass=commands())
+    return {"build": build, "build_html": build_html}

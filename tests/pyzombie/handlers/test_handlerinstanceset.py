@@ -43,7 +43,7 @@ class HandlerInstanceSetGetEmpty(unittest.TestCase):
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
         self.assertEqual(resp.code, HTTPStatus.OK.value)
-        self.assertEqual(resp.message,HTTPStatus.OK.phrase)
+        self.assertEqual(resp.message, HTTPStatus.OK.phrase)
         self.assertEqual(resp.header["Content-Type"], "text/html;UTF-8")
         self.assertEqual(resp.md5, resp.header["ETag"])
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
@@ -78,7 +78,7 @@ class HandlerInstanceSetPostJson(unittest.TestCase):
         resp = HTTPResponse(req.wfile.getvalue())
         self.assertEqual(resp.protocol, "HTTP/1.1")
         self.assertEqual(resp.code, HTTPStatus.CREATED.value)
-        self.assertEqual(resp.message,HTTPStatus.CREATED.phrase)
+        self.assertEqual(resp.message, HTTPStatus.CREATED.phrase)
         self.assertRegex(resp.header["Location"], self.loc_re)
         self.assertEqual(int(resp.header["Content-Length"]), 0)
 

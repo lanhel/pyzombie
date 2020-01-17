@@ -82,9 +82,7 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
         self.assertEqual(state["stdout"], urlself + "/stdout")
         self.assertEqual(state["stderr"], urlself + "/stderr")
         self.assertEqual(state["returncode"], self.inst.returncode)
-        self.assertEqual(
-            state["start"], self.inst.start.strftime("%Y-%m-%dT%H:%M:%SZ")
-        )
+        self.assertEqual(state["start"], self.inst.start.strftime("%Y-%m-%dT%H:%M:%SZ"))
         self.assertEqual(
             state["remove"], self.inst.remove.strftime("%Y-%m-%dT%H:%M:%SZ")
         )

@@ -118,7 +118,7 @@ class Executable:
         databuf = execfile.read(4096)
         while databuf:
             if isinstance(fp, io.TextIOBase):
-                databuf = str(databuf, encoding='utf-8')
+                databuf = str(databuf, encoding="utf-8")
             fp.write(databuf)
             databuf = fp.read(4096)
         fp.flush()
@@ -130,7 +130,7 @@ class Executable:
         databuf = fp.read(4096)
         while databuf:
             if isinstance(databuf, str):
-                databuf = bytes(databuf, encoding='utf-8')
+                databuf = bytes(databuf, encoding="utf-8")
             execfile.write(databuf)
             databuf = fp.read(4096)
         execfile.flush()

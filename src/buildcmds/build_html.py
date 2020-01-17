@@ -1,5 +1,5 @@
 #!/usr/bin/env python # -*- coding: UTF-8 -*-
-"""Setuptools build documents command."""
+"""Setuptools build HTML documents command."""
 __author__ = ("Lance Finn Helsten",)
 __copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
 __license__ = """
@@ -15,7 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-__all__ = ["build_docutils"]
+__all__ = ["has_rest_docs", "build_html"]
 
 import sys
 import os
@@ -26,21 +26,15 @@ import setuptools
 from distutils.command.build import build as build_orig
 
 
-def cmdclass():
-    class build(build_orig):
-        def has_rest_docs(self):
-            dist = self.distribution
-            src_root = os.path.abspath(dist.package_dir.get("", "."))
-            paths = doc_paths(src_root, dist.package_data)
-            try:
-                next(paths)
-                return True
-            except StopIteration:
-                return False
-
-        sub_commands = build_orig.sub_commands + [("build_docs", has_rest_docs)]
-
-    return {"build": build, "build_docs": build_docs}
+def has_rest_docs(self):
+    dist = self.distribution
+    src_root = os.path.abspath(dist.package_dir.get("", "."))
+    paths = doc_paths(src_root, dist.package_data)
+    try:
+        next(paths)
+        return True
+    except StopIteration:
+        return False
 
 
 def doc_paths(src_root, package_data):
@@ -59,8 +53,8 @@ def doc_paths(src_root, package_data):
         yield file
 
 
-class build_docs(setuptools.Command):
-    description = "Build documentation with Docutils."
+class build_html(setuptools.Command):
+    description = "Build HTML documentation."
     user_options = [
         ("build-base=", "b", "base directory for build library"),
         ("build-lib=", None, "build directory for all distribution"),
@@ -91,10 +85,7 @@ class build_docs(setuptools.Command):
         try:
             src_root = os.path.abspath(self.distribution.package_dir.get("", "."))
 
-            for f in doc_paths(
-                src_root,
-                self.distribution.package_data,
-            ):
+            for f in doc_paths(src_root, self.distribution.package_data,):
                 src = os.path.join(src_root, f)
                 dst = os.path.abspath(
                     os.path.join(self.build_lib, os.path.splitext(f)[0] + ".html")
