@@ -1,76 +1,117 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-# -------------------------------------------------------------------------------
 """
-**Name**
-    pyzombied — Start pyzombie server.
+pyzombie — Start pyzombie server.
 
-**Synopsis**
-    ``pyzombied.py [options]``
+*****
+Usage
+*****
 
-**Description**
-    The ``pyzombied.py`` command shall start the *pyzombie* HTTP RESTful
-    server.
+Name
+====
+    pyzombie
 
-**Options**
+Description
+===========
+    ``pyzombie`` command starts the *pyzombie* HTTP RESTful server.
+
+Options
+=======
+
+    ``-h --help``
+        Display help.
+
+    ``--version``
+        Show version of pyzombie.
+
     ``--home``
         Home directory to override $PYZOMBIEHOME.
 
     ``--config``
         Configuration file. Default: ``$PYZOMBIEHOME/etc/pyzombie.conf``.
 
-    ``--deamon``
-        Start pyzombie as a deamon under current user.
+    ``--daemon``
+        Start pyzombie as a daemon under current user.
 
     ``--port``
         Start pyzombie listening on this port. Default: 8008.
 
-    ``--verbose``
-        Change default logging verbosity: ``critical``, ``error``,
-        ``warning``, ``info``, ``debug``.
+    ``--verbose {{critical,error,warning,info,debug}}``
+        Change the root logger logging level and the root logger
+        handler name ``console`` logging level. Other loggers and
+        handlers are unchanged, but named loggers that use ``console``
+        handler may emit more log information.
 
-**Environment**
-    PYZOMBIEHOME
-        - pyzombie's home directory.
-        - Default: current working directory.
-        - Demon Mode: current user's home directory or empty if user is root.
+Environment
+===========
 
-**Directories and Files**
-    ``$PYZOMBIEHOME/etc/pyzombie.conf``
+``${HOME}``
+    The root location for all directories and files.
+
+
+Directories and Files
+---------------------
+
+    ``${HOME}/etc/pyzombie.conf``
         Configuration file.
 
-    ``$PYZOMBIEHOME/var/run/pyzombie.pid``
+    ``${HOME}/var/run/pyzombie.pid``
         File that contains the current pyzombie process id.
 
-    ``$PYZOMBIEHOME/var/log/pyzombie``
+    ``${HOME}/var/log/pyzombie``
         Directory that contains pyzombie log files.
 
-    ``$PYZOMBIEHOME/var/spool/pyzombie``
+    ``${HOME}/var/spool/pyzombie``
         Directory that contains executions waiting to run.
 
-    ``$PYZOMBIEHOME/tmp/pyzombie``
+    ``${HOME}/tmp/pyzombie``
         Directory to contain temporary files.
 
-**Configuration**
-    [pyzombie]
-        ``address``
-            The server address or DNS name: default localhost.
-        ``port``
-            The TCP/IP port to listen: default 8008.
 
-    [pyzombie_filesystem]
-        ``var``
-            The variable data root directory: default /var
+Configuration
+=============
 
-    [loggers]
-        ``root``
-            Required
-        ``zombie``
-            Required
+Configuration may be done through command line options or may be set in
+configuration files that are read from the following locations (later
+files will override settings in earlier files):
 
-    [handlers]
+    - ``/etc/pyzombie.conf``
+    - ``${HOME}/.config/pyzombie/pyzombie.conf``
+    - ``${PWD}/pyzombie.conf``
 
-    [formatters]
+
+Sections and Options
+--------------------
+
+``[pyzombie]``
+
+    ``address``
+        The server address or DNS name: default localhost.
+
+    ``port``
+        The TCP/IP port to listen: default 8008.
+
+
+Logging
+=======
+
+Logging configuration is done through the Python logging dictionary
+schema. The logging configuration will be read from the first file
+found in the following locations (if none found then an internal
+default configuration will be used):
+
+    - ``${PWD}/pyzombie_logging.conf``
+    - ``${HOME}/.config/pyzombie/pyzombie_logging.conf``
+    - ``/etc/pyzombie_logging.conf``
+
+Named Loggers
+-------------
+
+root
+    The default "unnamed" logger.
+
+zombie
+    The main logger
 """
 __author__ = ("Lance Finn Helsten",)
 __copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
@@ -91,8 +132,9 @@ __docformat__ = "reStructuredText en"
 
 import sys
 
-if sys.version_info < (3, 5):
-    raise Exception("{0} Requires Python 3.5 or higher.".format(sys.argv[0]))
+if sys.version_info < (3, 8):
+    raise Exception("{0} Requires Python 3.8 or higher.".format(sys.argv[0]))
+
 import os
 import errno
 import io
@@ -118,59 +160,31 @@ def resolvepath(path):
     return path
 
 
-### Parse the arguments
-parser = OptionParser(
-    description="pyzombie service",
-    version="%%prog %s" % (get_version(),),
-    usage="usage: %prog [options]",
-)
+def main(args=None):
+    """Configure system from CLI arguments and configuration files."""
 
-parser.add_option(
-    "",
-    "--home",
-    action="store",
-    type="string",
-    dest="home",
-    default=None,
-    help="Home directory to override $PYZOMBIEHOME.",
-)
-parser.add_option(
-    "",
-    "--config",
-    action="store",
-    type="string",
-    dest="config",
-    default=None,
-    help="Configuration file. Default: $PYZOMBIEHOME/etc/pyzombie.conf",
-)
-parser.add_option(
-    "",
-    "--deamon",
-    action="store_true",
-    dest="deamon",
-    default=False,
-    help="Start pyzombie as a deamon under current user.",
-)
-parser.add_option(
-    "",
-    "--port",
-    action="store",
-    type="string",
-    dest="port",
-    default=None,
-    help="TCP port pyzombie will listen (default: 8008).",
-)
-parser.add_option(
-    "",
-    "--verbose",
-    action="store",
-    type="string",
-    dest="verbose",
-    default=None,
-    help="Change default logging verbosity: critical, error, warning, info, debug.",
-)
+    import errno
 
-options, args = parser.parse_args()
+    configure_logging()
+    args = parse_commandline(args=args)
+
+    try:
+        logconf = io.StringIO()
+        pyzombie.ZombieConfig.config.write(logconf)
+        logconf.seek(0)
+        logging.config.fileConfig(logconf)
+    except configparser.NoSectionError:
+        logging.config.fileConfig(io.StringIO(CONFIG_INIT))
+        logging.getLogger("zombie").setLevel(logging.INFO)
+        logging.getLogger().info("Using default logging configuration.")
+    logging.getLogger().info("Logging initialized.")
+
+    try:
+        zombie = pyzombie.ZombieServer()
+        zombie.start()
+    except KeyboardInterrupt:
+        logging.debug("Keyboard interrupt")
+        sys.exit(errno.EINTR)
 
 
 ###
@@ -179,7 +193,7 @@ options, args = parser.parse_args()
 if "PYZOMBIEHOME" in os.environ:
     os.environ["PYZOMBIEHOME"] = os.environ["PYZOMBIEHOME"]
 else:
-    if options.deamon:
+    if options.daemon:
         if os.environ["USER"] == "root":
             os.environ["PYZOMBIEHOME"] = "/"
         else:
@@ -210,24 +224,5 @@ if options.verbose:
     pyzombie.ZombieConfig.config.set("logger_zombie", "level", options.verbose.upper())
 
 
-###
-### Setup logging configuration
-###
-try:
-    logconf = io.StringIO()
-    pyzombie.ZombieConfig.config.write(logconf)
-    logconf.seek(0)
-    logging.config.fileConfig(logconf)
-except configparser.NoSectionError:
-    logging.config.fileConfig(io.StringIO(CONFIG_INIT))
-    logging.getLogger("zombie").setLevel(logging.INFO)
-    logging.getLogger().info("Using default logging configuration.")
-logging.getLogger().info("Logging initialized.")
-
-
-### Start the zombie
-try:
-    zombie = pyzombie.ZombieServer()
-    zombie.start()
-except KeyboardInterrupt:
-    print("User cancel.")
+if __name__ == "__main__":
+    main()

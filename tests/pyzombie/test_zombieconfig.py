@@ -19,9 +19,7 @@ __license__ = """
 __docformat__ = "reStructuredText en"
 
 import sys
-
-if sys.version_info < (3, 0):
-    raise Exception("pyzombie requires Python 3.0 or higher.")
+import os
 import unittest
 import io
 import pyzombie
@@ -36,18 +34,12 @@ class ZombieConfigValuesTest(unittest.TestCase):
         self.assertEqual("zombie", config.get("pyzombie_filesystem", "execbase"))
         self.assertEqual("image", config.get("pyzombie_filesystem", "binary"))
 
-        self.assertEqual(
-            "./build/var/log/pyzombie", config.get("pyzombie_filesystem", "log")
-        )
-        self.assertEqual(
-            "./build/var/run/pyzombie.pid", config.get("pyzombie_filesystem", "run")
-        )
-        self.assertEqual(
-            "./build/var/data/pyzombie", config.get("pyzombie_filesystem", "data")
-        )
-        self.assertEqual(
-            "./build/var/cache/pyzombie", config.get("pyzombie_filesystem", "cache")
-        )
-        self.assertEqual(
-            "./build/var/spool/pyzombie", config.get("pyzombie_filesystem", "spool")
-        )
+        def assertVarDir(subdir, file="pyzombie"):
+            path = os.path.join(os.getcwd(), "var", subdir, file)
+            self.assertEqual(path, config.get("pyzombie_filesystem", subdir))
+
+        assertVarDir("log")
+        assertVarDir("run", file="pyzombie.pid")
+        assertVarDir("data")
+        assertVarDir("cache")
+        assertVarDir("spool")

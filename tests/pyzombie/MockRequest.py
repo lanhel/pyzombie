@@ -51,6 +51,9 @@ class MockHeaders(dict):
         ret = ["{0}: {1}".format(k, self.headers[k]) for k in self.headers.keys()]
         return os.linesep.join(ret)
 
+    def __repr__(self):
+        return f"<MockHeaders: {self}>"
+
 
 class MockRequest:
     """Mocks up an HTTP request for unit testing."""
@@ -64,6 +67,7 @@ class MockRequest:
             """Code: %(code)d\nMessage: %(message)s\nExplain: %(explain)s"""
         )
         self.config = self.server.config
+        self.__headers = MockHeaders()
 
     def __writeline(self, line):
         self.wfile.write(line.encode("UTF-8"))
@@ -104,8 +108,6 @@ class MockRequest:
 
     @property
     def headers(self):
-        if not hasattr(self, "_MockRequest__headers"):
-            self.__headers = MockHeaders()
         return self.__headers
 
     @property

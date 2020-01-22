@@ -19,9 +19,6 @@ __license__ = """
 __docformat__ = "reStructuredText en"
 
 import sys
-
-if sys.version_info < (3, 0):
-    raise Exception("pyzombie requires Python 3.0 or higher.")
 import os
 import io
 import shutil

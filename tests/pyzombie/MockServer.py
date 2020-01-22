@@ -24,7 +24,7 @@ import io
 import datetime
 import configparser
 import http.client
-from pyzombie.ZombieServer import CONFIG_INIT
+from pyzombie.ZombieConfig import CONFIG_INIT
 
 
 class MockServer:

@@ -17,14 +17,10 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = []
 
-import sys
-import os
-from datetime import datetime
-from datetime import timedelta
-import logging
+# pylint: disable=wildcard-import
+
 import socket
 import http.client
 import http.server
@@ -67,10 +63,10 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
     def resolvedispatch(self):
         """Resolve the path against resource patterns. If matched then return
         the dispatch object and the dictionary of recognized path parts."""
-        for zd in DISPATCH_TABLE:
-            parts = zd.match(self.path)
-            if parts != None:
-                return (zd, parts)
+        for handler in DISPATCH_TABLE:
+            parts = handler.match(self.path)
+            if parts is not None:
+                return (handler, parts)
         self.send_error(http.client.NOT_FOUND)
         self.end_headers()
         return (None, None)
@@ -79,17 +75,15 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
         """Determine the handler for the particular resource pattern and
         dispatch to that handler.
 
-        Parameters
-        ----------
-        method
-            The HTTP method that started this call. The lower case string
-            is the name of the method in the handler class that will be called.
+        :param method: The HTTP method that started this call. The lower
+            case string is the name of the method in the handler class
+            that will be called.
         """
-        zd, parts = self.resolvedispatch()
-        if zd is not None:
-            zd = zd(self, parts)
-            if hasattr(zd, method.lower()):
-                getattr(zd, method.lower())()
+        handler, parts = self.resolvedispatch()
+        if handler is not None:
+            handler = handler(self, parts)
+            if hasattr(handler, method.lower()):
+                getattr(handler, method.lower())()
             else:
                 self.send_error(
                     http.client.METHOD_NOT_ALLOWED,
@@ -97,45 +91,53 @@ class ZombieRequest(http.server.BaseHTTPRequestHandler):
                 )
                 self.end_headers()
 
+    # pylint: disable=invalid-name
+
     def do_OPTIONS(self):
+        """Dispatch handler for HTTP OPTIONS."""
         try:
-            zd, mo = self.resolvedispatch("OPTIONS")
-            if zd != None:
+            handler, _ = self.resolvedispatch()
+            if handler is not None:
                 self.send_response(http.client.OK)
                 self.send_header(
                     "Server", "pyzombie/" + get_version(root=".", relative_to=__file__)
                 )
-                self.send_header("Allow", zd.allow)
-                self.send_header("Location", zd.help)
+                self.send_header("Allow", handler.allow)
+                self.send_header("Location", handler.help)
                 self.end_headers()
         except socket.error as err:
             self.log_error("Internal socket error %s.", err)
 
     def do_HEAD(self):
+        """Dispatch handler for HTTP HEAD."""
         try:
             self.dispatch("HEAD")
         except socket.error as err:
             self.log_error("Internal socket error %s.", err)
 
     def do_GET(self):
+        """Dispatch handler for HTTP GET."""
         try:
             self.dispatch("GET")
         except socket.error as err:
             self.log_error("Internal socket error %s.", err)
 
     def do_POST(self):
+        """Dispatch handler for HTTP POST."""
         try:
             self.dispatch("POST")
         except socket.error as err:
             self.log_error("Internal socket error %s.", err)
 
     def do_PUT(self):
+        """Dispatch handler for HTTP PUT."""
         try:
             self.dispatch("PUT")
         except socket.error as err:
             self.log_error("Internal socket error %s.", err)
 
     def do_DELETE(self):
+        """Dispatch handler for HTTP DELETE."""
         try:
             self.dispatch("DELETE")
         except socket.error as err:

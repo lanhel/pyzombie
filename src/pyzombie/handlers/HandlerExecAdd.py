@@ -18,12 +18,8 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["HandlerExecAdd"]
 
-import sys
-import io
-import logging
 import mimetypes
 import http.client
 from .HandlerLeftovers import HandlerLeftovers
@@ -34,6 +30,7 @@ class HandlerExecAdd(HandlerLeftovers):
 
     @classmethod
     def dispatch(cls):
+        """Dispatch definition."""
         cls.initdispatch(r"""^/add$""", "GET,POST,OPTIONS,TRACE", "/help/RESTful")
         return cls
 
@@ -41,6 +38,7 @@ class HandlerExecAdd(HandlerLeftovers):
         super().__init__(req, {"leftover": "ExecAdd.html"})
 
     def post(self):
+        """Handler for HTTP POST."""
         fs = self.multipart()
         if fs:
             ctype, enc = mimetypes.guess_type(fs["execfile"].filename)

@@ -16,10 +16,4 @@ __license__ = """
     limitations under the License.
 """
 
-
-import sys
-
-if sys.version_info < (3, 0):
-    raise Exception("pyzombie requires Python 3.0 or higher.")
-
 from .ZombieServer import *

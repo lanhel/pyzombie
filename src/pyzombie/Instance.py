@@ -17,10 +17,8 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["Instance"]
 
-import sys
 import os
 import shutil
 import io
@@ -32,7 +30,7 @@ from threading import Thread
 from time import sleep
 import logging
 from setuptools_scm import get_version
-from .ZombieConfig import config, datadir
+from .ZombieConfig import config
 
 
 DELTA_T = 0.01
@@ -49,13 +47,15 @@ class ActiveTest(Thread):
 
     def run(self):
         """Poll the child process on a regular schedule to determine still alive."""
+
+        # pylint: disable=protected-access
+        # pylint: disable=broad-except
+
         logging.getLogger("zombie").info("Start %s", self.name)
         while True:
             try:
                 sleep(DELTA_T)
-                self.__instances -= set(
-                    [i for i in self.instances if i.process is None]
-                )
+                self.__instances -= {i for i in self.instances if i.process is None}
                 stopped = [i for i in self.instances if i.process.poll() is not None]
                 self.__instances -= set(stopped)
                 for i in stopped:
@@ -70,65 +70,21 @@ class ActiveTest(Thread):
 
     @property
     def instances(self):
+        """Return set of instance still alive."""
         return self.__instances
 
 
-activetest = ActiveTest()
+ACTIVE_TEST = ActiveTest()
 
 
 class Instance:
     """This represents a instance of an executable. When an instance is
     created it will add itself to the list of loaded instances in the
     owning Executable object.
-    
-    Properties
-    ----------
-    executable
-        The executable factory that created this instance.
-    name
-        The name of this execution instance.
-    environ
-        The environment that was used to start this instance.
-    arguments
-        The command line arguments used to start this instance.
-    datadir
-        The path to the instance data directory.
-    workdir
-        The path to the instance's initial working directory.
-    tmpdir
-        The path to the instance's temporary directory.
-    timeout
-        The ``datetime`` stamp when the instance shall be terminated. This will
-        update as the process adds data to the stdout and stderr streams.
-    remove
-        The ``datetime`` stamp after which the instance may be removed from
-        the list of instances in the executable. This is generally seven days
-        after the creation of the instance.
-    process
-        The subprocess object the instance is executing in, or ``None`` if
-        the instance has completed execution.
-    start
-        The ``datetime`` stamp when the instance was started.
-    end
-        The ``datetime`` stamp when the instance was terminated.
-    returncode
-        The numeric exit status of the instance, or ``None`` if the instance
-        is still running.
-    stdin
-        The file like object to feed data into the instance. If the instance
-        has completed execution this will be a closed file. Closing this
-        stream will send an EOF to the process instance.
-    stdout_path
-        This is the path to the stored stdout file.
-    stdout
-        The file like object that contains the standard output. This is a
-        random access read only file.
-    stderr_path
-        This is the path to the stored stderr file.
-    stderr
-        The file like object that contains the standard error. This is a
-        random access read only file.
     """
+
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-public-methods
 
     @classmethod
     def createname(cls):
@@ -140,7 +96,7 @@ class Instance:
     @classmethod
     def getcached(cls, executable, name):
         """Get a cached instance from the executable if it exists.
-        
+
         Parameters
         ----------
         executable
@@ -157,7 +113,7 @@ class Instance:
                 inst = Instance(executable, name)
         return inst
 
-    def __init__(self, executable, name, environ={}, arguments=[]):
+    def __init__(self, executable, name, environ=None, arguments=None):
         """
         Parameters
         ----------
@@ -178,9 +134,11 @@ class Instance:
         self.executable.instances[name] = self
         self.__name = name
         self.__statepath = os.path.join(self.datadir, "state.json")
-        self.__environ = environ
-        self.__arguments = arguments
+        self.__environ = environ if environ else {}
+        self.__arguments = arguments if arguments else []
         self.__process = None
+        self.__start = None
+        self.__end = None
         self.__timeout_delta = timedelta(seconds=5)
         self.__stdin = None
         self.__stdout = None
@@ -211,14 +169,14 @@ class Instance:
                     env=self.environ,
                     shell=False,
                 )
-                activetest.instances.add(self)
+                ACTIVE_TEST.instances.add(self)
             except OSError as err:
                 if err.errno != errno.ENOENT:
                     raise err
                 logging.getLogger("zombie").warning(
-                    "Unable to find executable for instance {0}/{1}.".format(
-                        self.executable.name, self.name
-                    )
+                    "Unable to find executable for instance %s/%s.",
+                    self.executable.name,
+                    self.name,
                 )
             self.__save()
 
@@ -261,38 +219,49 @@ class Instance:
 
     @property
     def executable(self):
+        """The executable factory that created this instance."""
         return self.__executable
 
     @property
     def name(self):
+        """The name of this execution instance."""
         return self.__name
 
     @property
     def restname(self):
+        """Fully qualified name of this instance."""
         return os.path.join(self.executable.name, "instances", self.name)
 
     @property
     def environ(self):
+        """The environment that was used to start this instance."""
         return self.__environ
 
     @property
     def arguments(self):
+        """The command line arguments used to start this instance."""
         return self.__arguments
 
     @property
     def datadir(self):
+        """The path to the instance data directory."""
         return os.path.join(self.executable.dirpath, self.name)
 
     @property
     def workdir(self):
+        """The path to the instance's initial working directory."""
         return os.path.join(self.datadir, "var")
 
     @property
     def tmpdir(self):
+        """The path to the instance's temporary directory."""
         return os.path.join(self.datadir, "tmp")
 
     @property
     def timeout(self):
+        """The ``datetime`` stamp when the instance shall be
+        terminated. This will update as the process adds data
+        to the stdout and stderr streams."""
         outmtime = datetime.utcfromtimestamp(os.path.getmtime(self.stdout_path))
         errmtime = datetime.utcfromtimestamp(os.path.getmtime(self.stderr_path))
         if outmtime >= errmtime:
@@ -302,49 +271,69 @@ class Instance:
 
     @property
     def remove(self):
+        """The ``datetime`` stamp after which the instance may
+        be removed from the list of instances in the executable.
+        This is generally seven days after the creation of the
+        instance."""
         return self.__remove
 
     @property
     def process(self):
+        """The subprocess object the instance is executing in,
+        or ``None`` if the instance has completed execution."""
         return self.__process
 
     @property
     def start(self):
+        """The ``datetime`` stamp when the instance was started."""
         return self.__start
 
     @property
     def end(self):
+        """The ``datetime`` stamp when the instance was terminated."""
         return self.__end
 
     @property
     def returncode(self):
+        """The numeric exit status of the instance, or ``None``
+        if the instance is still running."""
         return self.__returncode
 
     @property
     def stdin(self):
+        """The file like object to feed data into the instance.
+
+        If the instance has completed execution this will be a
+        closed file. Closing this stream will send an EOF to
+        the process instance."""
         if self.process:
             return self.process.stdin
         else:
             ret = io.StringIO()
-            ret.close()
             return ret
 
     @property
     def stdout_path(self):
+        """This is the path to the stored stdout file."""
         return os.path.join(self.datadir, "stdout.txt")
 
     @property
     def stdout(self):
+        """The file like object that contains the standard output.
+        This is a random access read only file."""
         if self.__stdout is None or self.__stdout.closed:
             self.__stdout = open(self.stdout_path, mode="r", encoding="UTF-8")
         return self.__stdout
 
     @property
     def stderr_path(self):
+        """This is the path to the stored stderr file."""
         return os.path.join(self.datadir, "stderr.txt")
 
     @property
     def stderr(self):
+        """The file like object that contains the standard error.
+        This is a random access read only file."""
         if self.__stderr is None or self.__stderr.closed:
             self.__stderr = open(self.stderr_path, mode="r", encoding="UTF-8")
         return self.__stderr
@@ -379,7 +368,7 @@ class Instance:
             if state["end"]:
                 self.__end = datetime.strptime(state["end"], self.DATETIME_FMT)
             else:
-                self.__end = datetime.utcnow()
+                self.__end = None
 
             if state["returncode"] is not None:
                 self.__returncode = int(state["returncode"])

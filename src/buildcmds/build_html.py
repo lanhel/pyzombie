@@ -15,18 +15,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-__all__ = ["has_rest_docs", "build_html"]
+__all__ = ["has_html_source", "BuildHtml"]
 
 import sys
 import os
+import errno
 import itertools
 import glob
 import subprocess
 import setuptools
-from distutils.command.build import build as build_orig
 
 
-def has_rest_docs(self):
+def has_html_source(self):
+    """Check if source docs for build_html present."""
     dist = self.distribution
     src_root = os.path.abspath(dist.package_dir.get("", "."))
     paths = doc_paths(src_root, dist.package_data)
@@ -53,7 +54,14 @@ def doc_paths(src_root, package_data):
         yield file
 
 
-class build_html(setuptools.Command):
+class BuildHtml(setuptools.Command):
+    """Setuptools command to build HTML documents.
+
+    Source documents must be reStructuredText.
+    """
+
+    # pylint: disable=attribute-defined-outside-init
+
     description = "Build HTML documentation."
     user_options = [
         ("build-base=", "b", "base directory for build library"),
@@ -62,15 +70,18 @@ class build_html(setuptools.Command):
     ]
 
     def initialize_options(self):
+        """Default values for user options."""
         self.build_base = "build"
         self.build_lib = None
         self.force = False
 
     def finalize_options(self):
+        """Set final values of user options."""
         if self.build_lib is None:
             self.build_lib = os.path.join(self.build_base, "lib")
 
     def run(self):
+        """Build HTML documents from supported source files."""
         args = [
             "rst2html.py",
             "--stylesheet",
@@ -85,10 +96,10 @@ class build_html(setuptools.Command):
         try:
             src_root = os.path.abspath(self.distribution.package_dir.get("", "."))
 
-            for f in doc_paths(src_root, self.distribution.package_data,):
-                src = os.path.join(src_root, f)
+            for fname in doc_paths(src_root, self.distribution.package_data):
+                src = os.path.join(src_root, fname)
                 dst = os.path.abspath(
-                    os.path.join(self.build_lib, os.path.splitext(f)[0] + ".html")
+                    os.path.join(self.build_lib, os.path.splitext(fname)[0] + ".html")
                 )
                 if not os.path.isdir(os.path.dirname(dst)):
                     os.makedirs(os.path.dirname(dst))
@@ -97,7 +108,7 @@ class build_html(setuptools.Command):
                     or not os.path.isfile(dst)
                     or os.path.getmtime(src) > os.path.getmtime(dst)
                 ):
-                    print("Docutils", f)
+                    print("Docutils", fname)
                     args[-2] = os.path.abspath(src)
                     args[-1] = os.path.abspath(dst)
                     ret = subprocess.call(args)

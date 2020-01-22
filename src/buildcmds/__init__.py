@@ -19,13 +19,19 @@ __license__ = """
 
 def cmdclass():
     """Return dictionary suitable for setup ``cmdclass`` parameter."""
+
+    # pylint: disable=import-outside-toplevel
+    # pylint: disable=invalid-name
+
     from distutils.command.build import build as build_orig
-    from .build_html import build_html, has_rest_docs
+    from .build_html import BuildHtml, has_html_source
 
     commands = build_orig.sub_commands
-    commands.append(("build_html", has_rest_docs))
+    commands.append(("build_html", has_html_source))
 
     class build(build_orig):
+        """Build command class to add additional commands."""
+
         sub_commands = commands
 
-    return {"build": build, "build_html": build_html}
+    return {"build": build, "build_html": BuildHtml}

@@ -18,14 +18,9 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["HandlerExecStart"]
 
-import sys
 import os
-import io
-import logging
-import mimetypes
 import http.client
 from ..Instance import Instance
 from .HandlerLeftovers import HandlerLeftovers
@@ -36,6 +31,7 @@ class HandlerExecStart(HandlerLeftovers):
 
     @classmethod
     def dispatch(cls):
+        """Dispatch definition."""
         cls.initdispatch(
             r"""^/(?P<execname>\w+)/start$""", "GET,POST,OPTIONS,TRACE", "/help/RESTful"
         )
@@ -46,6 +42,7 @@ class HandlerExecStart(HandlerLeftovers):
         super().__init__(req, urlargs)
 
     def get(self):
+        """Handler for HTTP GET."""
         env = [k for k in os.environ]
         env.sort()
         env = ["{0} = {1}".format(k, os.environ[k]) for k in env]
@@ -61,6 +58,7 @@ class HandlerExecStart(HandlerLeftovers):
         self.flush()
 
     def post(self):
+        """Handler for HTTP POST."""
         fs = self.multipart()
         if fs:
             environ = fs.getfirst("environ")

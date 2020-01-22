@@ -18,81 +18,48 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = []
 
-import sys
 import os
 import io
-import time
-import threading
-import configparser
-from datetime import datetime
-from datetime import timedelta
-import logging
-import logging.config
+from configparser import ConfigParser, ExtendedInterpolation
 
-###
-### Initial Configuration
-###
-CONFIG_INIT = """
+
+CONFIG_INIT = f"""
 [pyzombie]
-address:        localhost
-port:           8008
-maxage_dynamic: 3600
-maxage_static:  604800
+    address:        localhost
+    port:           8008
+    maxage_dynamic: 3600
+    maxage_static:  604800
 
 [pyzombie_filesystem]
-execbase:   zombie
-binary:     image
-instance:   run
+    execbase:   zombie
+    binary:     image
+    instance:   run
 
-var=./build/var
-log:        %(var)s/log/pyzombie
-run:        %(var)s/run/pyzombie.pid
-data:       %(var)s/data/pyzombie
-cache:      %(var)s/cache/pyzombie
-spool:      %(var)s/spool/pyzombie
-
-[loggers]
-keys=root,zombie
-
-[handlers]
-keys=consoleHandler
-
-[formatters]
-keys=simpleFormatter
-
-[logger_root]
-level=DEBUG
-handlers=consoleHandler
-
-[logger_zombie]
-level=INFO
-handlers=consoleHandler
-qualname=zombie
-propagate=0
-
-[handler_consoleHandler]
-class=StreamHandler
-level=DEBUG
-formatter=simpleFormatter
-args=(sys.stdout,)
-
-[formatter_simpleFormatter]
-format=%(asctime)s %(levelname)s %(message)s
-datefmt=
+    home:       {os.getcwd()}
+    var:        ${{home}}/var
+    log:        ${{var}}/log/pyzombie
+    run:        ${{var}}/run/pyzombie.pid
+    data:       ${{var}}/data/pyzombie
+    cache:      ${{var}}/cache/pyzombie
+    spool:      ${{var}}/spool/pyzombie
 """
 
 
-###
-### Global configuration
-###
-config = configparser.ConfigParser()
+config = ConfigParser(interpolation=ExtendedInterpolation())
 config.read_file(io.StringIO(CONFIG_INIT))
+paths = config.read(
+    [
+        os.path.join("/", "etc"),
+        os.path.join(os.environ["HOME"], ".config", "pyzombie", "pyzombie.conf"),
+        os.path.join(os.getcwd(), "etc", "pyzombie.conf"),
+    ]
+)
 
 
 def datadir():
+    """Data directory in the pyzombie filesytem."""
     ret = config.get("pyzombie_filesystem", "data")
     if ret.startswith("."):
         ret = os.path.join(os.getcwd(), ret)

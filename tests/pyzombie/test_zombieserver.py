@@ -19,9 +19,6 @@ __license__ = """
 __docformat__ = "reStructuredText en"
 
 import sys
-
-if sys.version_info < (3, 0):
-    raise Exception("pyzombie requires Python 3.0 or higher.")
 import unittest
 import io
 import pyzombie
@@ -50,7 +47,7 @@ class MockSocketConnection:
 class ZobieRequestGetTest(unittest.TestCase):
     def runTest(self):
         body = """GET /executable/1234 HTTP/1.1
-        
+
         """
         pass
         # request = MockSocketConnection(body)

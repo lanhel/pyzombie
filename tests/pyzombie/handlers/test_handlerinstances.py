@@ -76,6 +76,7 @@ class HandlerInstanceGetJsonTest(unittest.TestCase):
         self.assertEqual(int(resp.header["Content-Length"]), len(resp.body))
 
         state = json.load(io.StringIO(str(resp.body, "UTF-8")))
+        print(state)
         self.assertEqual(state["version"], get_version())
         self.assertEqual(state["self"], urlself)
         self.assertEqual(state["stdin"], urlself + "/stdin")

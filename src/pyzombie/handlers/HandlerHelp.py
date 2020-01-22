@@ -17,12 +17,9 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["HandlerHelp"]
 
-import sys
 import os
-import logging
 import http.client
 import http.server
 from ..Handler import Handler
@@ -52,10 +49,11 @@ INDEX_ROW = """    <li><a href="help/{0}">{0}</a></li>"""
 
 
 class HandlerHelp(Handler):
-    """Handle the root resource."""
+    """Handle the help and documentation resource."""
 
     @classmethod
     def dispatch(cls):
+        """Dispatch definition."""
         cls.initdispatch(
             r"""^/help(/(?P<helpfile>\w+(\.\w+)?)?)?$""",
             "GET,OPTIONS,TRACE",
@@ -64,10 +62,12 @@ class HandlerHelp(Handler):
         return cls
 
     def head(self):
+        """Handler for HTTP HEAD."""
         self.content = "Headers"
         self.get()
 
     def get(self):
+        """Handler for HTTP GET."""
         html = None
         if self.urlargs["helpfile"] is None:
             files = [os.path.splitext(f) for f in os.listdir(HELPDIR)]

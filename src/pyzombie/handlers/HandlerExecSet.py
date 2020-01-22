@@ -18,16 +18,10 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["HandlerExecSet"]
 
-
-import sys
 import os
-import re
-import string
 from datetime import datetime
-import logging
 import cgi
 import http.client
 import http.server
@@ -54,16 +48,21 @@ INDEX_ROW = """    <li><a href="{0}">{0}</a></li>"""
 
 
 class HandlerExecSet(Handler):
+    """Handler for executable set endpoint."""
+
     @classmethod
     def dispatch(cls):
+        """Dispatch definition."""
         cls.initdispatch(r"""^/$""", "GET,POST,OPTIONS,TRACE", "/help/RESTful")
         return cls
 
     def head(self):
+        """Handler for HTTP HEAD."""
         self.content = "Headers"
         self.get()
 
     def get(self):
+        """Handler for HTTP GET."""
         mtime = datetime.utcfromtimestamp(os.path.getmtime(self.datadir))
 
         dirs = [
@@ -82,6 +81,7 @@ class HandlerExecSet(Handler):
         self.flush()
 
     def post(self):
+        """Handler for HTTP POST."""
         ctype, pdict = cgi.parse_header(self.req.headers["Content-Type"])
         self.initexecutable(mediatype=ctype)
         self.executable.writeimage(self.rfile_safe())

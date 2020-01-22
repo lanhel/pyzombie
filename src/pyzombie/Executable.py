@@ -17,40 +17,19 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["Executable"]
 
-import sys
 import os
 import io
 import stat
 import shutil
 from datetime import datetime
 import mimetypes
-import weakref
 from .ZombieConfig import config, datadir
 
 
 class Executable:
-    """This represents a single executable within the system.
-
-    Properties
-    ----------
-    name
-        The name of this executable.
-    dirpath
-        The path to the specific data directory for this executable.
-    binpath
-        The path to the executable image for this executable.
-    mediatype
-        The internet media type of executable.
-    datadir
-        The data directory that holds executables persistent information.
-    execbase
-        The base name for all executable directories.
-    binaryname
-        The base name for an executable's binary image.
-    """
+    """This represents a single executable within the system."""
 
     @classmethod
     def createname(cls):
@@ -70,6 +49,7 @@ class Executable:
 
     @classmethod
     def execdirpath(cls, name):
+        """Path to directories that holds all executables."""
         return os.path.normpath(os.path.join(datadir(), name))
 
     __cache = {}
@@ -145,32 +125,35 @@ class Executable:
 
     @property
     def datadir(self):
+        """data directory that holds executables persistent information."""
         return datadir()
 
     @property
     def execbase(self):
+        """Base name for all executable directories."""
         return config.get("pyzombie_filesystem", "execbase")
 
     @property
     def binaryname(self):
+        """Base name for executable's binary image."""
         return config.get("pyzombie_filesystem", "binary")
 
     @property
     def name(self):
-        """This is the RESTful name of the executable."""
+        """RESTful name of the executable."""
         return self.__name
 
     @property
     def dirpath(self):
-        """This is the path to the executable directory."""
+        """Path to the executable directory."""
         return self.__edir
 
     @property
     def binpath(self):
-        """This is the path to the executable file."""
+        """Path to the executable file."""
         return self.__bin
 
     @property
     def mediatype(self):
-        """This is the internet media type of the executable."""
+        """Internet media type of the executable."""
         return self.__mediatype

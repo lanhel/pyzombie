@@ -18,26 +18,20 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["HandlerExec"]
 
-
-import sys
-import os
-import re
-import string
-from datetime import datetime
-import logging
 import cgi
-import mimetypes
 import http.client
 import http.server
 from ..Handler import Handler
 
 
 class HandlerExec(Handler):
+    """Handler for executable endpoint."""
+
     @classmethod
     def dispatch(cls):
+        """Dispatch definition."""
         cls.initdispatch(
             r"""^/(?P<execname>\w+)/?$""",
             "GET,PUT,DELETE,OPTIONS,TRACE",
@@ -46,15 +40,18 @@ class HandlerExec(Handler):
         return cls
 
     def head(self):
+        """Handler for HTTP HEAD."""
         self.content = "Headers"
         self.get()
 
     def get(self):
+        """Handler for HTTP GET."""
         self.writefile(self.executable.binpath)
         self.status = http.client.OK
         self.flush()
 
     def put(self):
+        """Handler for HTTP PUT."""
         ctype, pdict = cgi.parse_header(self.req.headers["Content-Type"])
         if ctype != self.executable.mediatype[0]:
             self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
@@ -63,6 +60,7 @@ class HandlerExec(Handler):
         self.flush()
 
     def delete(self):
+        """Handler for HTTP DELETE."""
         self.executable.delete()
         self.status = http.client.OK
         self.flush()

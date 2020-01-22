@@ -17,18 +17,10 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["HandlerLeftovers"]
 
-
-import sys
 import os
-import mimetypes
-import logging
-import http.client
-import http.server
 from ..Handler import Handler
-
 
 HTTPFILES = os.path.normpath(os.path.join(os.path.dirname(__file__), "../httpfiles"))
 
@@ -41,6 +33,7 @@ class HandlerLeftovers(Handler):
 
     @classmethod
     def dispatch(cls):
+        """Dispatch definition."""
         cls.initdispatch(
             r"""^/(?P<leftover>.+)?$""", "GET,OPTIONS,TRACE", "/help/RESTful"
         )
@@ -53,10 +46,12 @@ class HandlerLeftovers(Handler):
         return file
 
     def head(self):
+        """Handler for HTTP HEAD."""
         self.content = "Headers"
         self.get()
 
     def get(self):
+        """Handler for HTTP GET."""
         file = self.filepath()
         self.writefile(file)
         self.flush()

@@ -17,28 +17,20 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["ZombieServer"]
 
-import sys
 import os
-import io
 import time
 import threading
-import configparser
-from datetime import datetime
-from datetime import timedelta
 import logging
 import logging.config
 import http.client
 import http.server
 import socketserver
 from .ZombieRequest import ZombieRequest
-from .ZombieConfig import config, CONFIG_INIT
+from .ZombieConfig import config
 
-###
-###
-###
+
 class ZombieServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     """Create a new ZombieServer to handle RESTful HTTP requests.
 
@@ -76,9 +68,11 @@ class ZombieServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
     def __init_makedir(self, confname):
         """Make a directory given a named value in the config [filesystem] section."""
+        # pylint: disable=no-self-use
+
         path = config.get("pyzombie_filesystem", confname)
         path = os.path.normpath(path)
         if not os.path.isdir(path):
-            logging.getLogger().info("Create directory: {0}".format(path))
+            logging.getLogger().info("Create directory: %s", path)
             os.makedirs(path)
         ## TODO: check permissions

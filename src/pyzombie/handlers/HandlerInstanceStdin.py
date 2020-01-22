@@ -18,23 +18,19 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["HandlerInstanceStdin"]
 
-
-import sys
-import os
 import io
-import re
-import logging
+import cgi
 import http.client
 import http.server
-from ..Handler import Handler
 from ..Instance import Instance
 from .HandlerLeftovers import HandlerLeftovers
 
 
 class HandlerInstanceStdin(HandlerLeftovers):
+    """Executable instance stdin handler."""
+
     @classmethod
     def dispatch(cls):
         cls.initdispatch(
@@ -49,6 +45,7 @@ class HandlerInstanceStdin(HandlerLeftovers):
         super().__init__(req, urlargs)
 
     def get(self):
+        """Handle HTTP GET."""
         name = self.urlargs["instname"]
         inst = Instance.getcached(self.executable, name)
         self.status = http.client.OK
@@ -60,19 +57,20 @@ class HandlerInstanceStdin(HandlerLeftovers):
         self.flush()
 
     def post(self):
+        """Handle HTTP POST."""
         name = self.urlargs["instname"]
         inst = Instance.getcached(self.executable, name)
-        fp = None
-        ctype, pdict = cgi.parse_header(self.req.headers["Content-Type"])
+        postfile = None
+        ctype, _ = cgi.parse_header(self.req.headers["Content-Type"])
         if ctype == "text/plain":
-            fp = self.req.rfile
+            postfile = self.req.rfile
         elif ctype == "multipart/form-data":
-            fs = self.multipart()
-            if fs:
-                fp = io.StringIO(fs["stdin"])
+            partfile = self.multipart()
+            if partfile:
+                postfile = io.StringIO(partfile["stdin"])
 
-        if fp is not None:
-            databuf = fp.read()
+        if postfile is not None:
+            databuf = postfile.read()
             inst.stdin.write(databuf)
         else:
             self.error(http.client.UNSUPPORTED_MEDIA_TYPE)

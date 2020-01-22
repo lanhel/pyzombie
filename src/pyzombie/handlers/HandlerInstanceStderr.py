@@ -18,15 +18,8 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["HandlerInstanceStderr"]
 
-
-import sys
-import os
-import io
-import re
-import logging
 import http.client
 import http.server
 from ..Handler import Handler
@@ -34,8 +27,11 @@ from ..Instance import Instance
 
 
 class HandlerInstanceStderr(Handler):
+    """Handler for instance stderr endpoint."""
+
     @classmethod
     def dispatch(cls):
+        """Dispatch definition."""
         cls.initdispatch(
             r"""^/(?P<execname>\w+)/instances/(?P<instname>\w+)/stderr$""",
             "GET,OPTIONS,TRACE",
@@ -44,10 +40,12 @@ class HandlerInstanceStderr(Handler):
         return cls
 
     def head(self):
+        """Handler for HTTP HEAD."""
         self.content = "Headers"
         self.get()
 
     def get(self):
+        """Handler for HTTP GET."""
         name = self.urlargs["instname"]
         inst = Instance.getcached(self.executable, name)
         if inst and inst.returncode is not None:

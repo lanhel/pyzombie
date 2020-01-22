@@ -18,17 +18,11 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["HandlerInstanceSet"]
 
-
-import sys
 import os
-import re
-import string
 import json
 from datetime import datetime
-import logging
 import cgi
 import http.client
 import http.server
@@ -56,8 +50,11 @@ INDEX_ROW = """    <li><a href="{0}">{0}</a></li>"""
 
 
 class HandlerInstanceSet(Handler):
+    """Handler for instance setting endpoint."""
+
     @classmethod
     def dispatch(cls):
+        """Dispatch definition."""
         cls.initdispatch(
             r"""^/(?P<execname>\w+)/instances/$""",
             "GET,POST,OPTIONS,TRACE",
@@ -66,10 +63,12 @@ class HandlerInstanceSet(Handler):
         return cls
 
     def head(self):
+        """Handler for HTTP HEAD."""
         self.content = "Headers"
         self.get()
 
     def get(self):
+        """Handler for HTTP GET."""
         mtime = datetime.utcfromtimestamp(os.path.getmtime(self.executable.dirpath))
         dirs = [
             INDEX_ROW.format(d)
@@ -87,6 +86,7 @@ class HandlerInstanceSet(Handler):
         self.flush()
 
     def post(self):
+        """Handler for HTTP POST."""
         ctype, pdict = cgi.parse_header(self.req.headers["Content-Type"])
         if ctype == "application/yaml":
             self.error(http.client.UNSUPPORTED_MEDIA_TYPE)

@@ -17,21 +17,17 @@ __license__ = """
     limitations under the License.
 """
 __docformat__ = "reStructuredText en"
-
 __all__ = ["Handler"]
 
 import sys
 import os
-from datetime import datetime
 import mimetypes
 import hashlib
 import re
 import cgi
-import cgitb
 import http.client
-from .ZombieConfig import config, datadir
+from .ZombieConfig import datadir
 from .Executable import Executable
-
 
 # cgitb.enable()
 
@@ -53,18 +49,19 @@ FLUSHED = "Flushed"
 class Handler:
     """Holds all the information necessary to handle a single resource dispatch.
 
-    Properties
-    ----------
-    executable
-        The Executable object for this handler. In rare cases no executable
-        can be determined so this will return None.
+    :param executable: The Executable object for this handler. In rare
+        cases no executable can be determined so this will return None.
     """
 
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-public-methods
+
     @classmethod
-    def initdispatch(cls, regex, allow, help):
+    def initdispatch(cls, regex, allow, helppath):
+        """Initialize dispatch table."""
         cls.regex = re.compile(regex)
         cls.allow = allow
-        cls.help = help
+        cls.help = helppath
         return cls
 
     @classmethod
@@ -74,7 +71,7 @@ class Handler:
         return None."""
         ret = None
         mo = cls.regex.match(path)
-        if mo != None:
+        if mo is not None:
             ret = mo.groupdict()
         return ret
 
@@ -86,9 +83,15 @@ class Handler:
         self.__status = None
         self.headers = {}
         self.lines = []
+        self.__acceptset = None
+        self.__acceptlangset = None
+        self.__acceptencset = None
+        self.__etag = None
+        self.__executable = None
 
     @property
     def status(self):
+        """Current response status of this request."""
         return self.__status
 
     @status.setter
@@ -97,56 +100,63 @@ class Handler:
 
     @property
     def startstamp(self):
+        """Return timestamp of the request."""
         return self.req.server.stamp
 
     @property
     def startstamprfc850(self):
+        """Return timestamp as RFC850 string."""
         return self.req.date_time_string()
 
     @property
     def datadir(self):
+        """Return path to data directory used by this request."""
         return datadir()
 
     @property
-    def executable(self, mediatype=None):
-        if not hasattr(self, "_Handler__executable"):
+    def executable(self):
+        """Return the Executable object for this request."""
+        if self.__executable is None:
             self.initexecutable()
         return self.__executable
 
     @property
     def accept(self):
         """Return an ordered set of media types that will be accepted."""
-        if not hasattr(self, "acceptset"):
+        if not self.__acceptset:
             astr = self.req.headers["Accept"]
             if astr is None:
                 astr = "text/html"
-            self.acceptset = self.__parseq(astr)
-            self.acceptset.append(None)
-        return self.acceptset
+            self.__acceptset = self.__parseq(astr)
+            self.__acceptset.append(None)
+        return self.__acceptset
 
     @property
     def acceptlanguage(self):
         """Return an ordered set of languages that will be accepted."""
-        if not hasattr(self, "acceptlangset"):
+        if not self.__acceptlangset:
             astr = self.req.headers["Accept-Language"]
             if astr is None:
                 astr = "en"
-            self.acceptlangset = self.__parseq(astr)
-            self.acceptlangset.append(None)
-        return self.acceptlangset
+            self.__acceptlangset = self.__parseq(astr)
+            self.__acceptlangset.append(None)
+        return self.__acceptlangset
 
     @property
     def acceptencoding(self):
         """Return an ordered set of langauges that will be accepted."""
-        if not hasattr(self, "acceptencset"):
+        if not self.__acceptencset:
             astr = self.req.headers["Accept-Encoding"]
             if astr is None:
                 astr = ""
-            self.acceptencset = self.__parseq(astr)
-            self.acceptencset.append(None)
-        return self.acceptencset
+            self.__acceptencset = self.__parseq(astr)
+            self.__acceptencset.append(None)
+        return self.__acceptencset
 
     def __parseq(self, astr):
+        # pylint: disable=no-self-use
+        # pylint: disable=invalid-name
+
         qre = re.compile(r"([a-zA-Z*]+/[a-zA-Z*]+)(\s*;\s*q=(\d+(\.\d+))?)?")
         astr = astr.split(",")
         aset = ["DUMMY"]
@@ -170,54 +180,48 @@ class Handler:
         type. Generally using the executable property directly will give
         correct results. This is really only used when POST of a new exectuable
         occurs."""
-        if hasattr(self, "_Handler__executable"):
+        if self.__executable is not None:
             raise AttributeError("Executable property is already initialized.")
         if "execname" in self.urlargs:
             name = self.urlargs["execname"]
         else:
             name = Executable.createname()
         self.__executable = Executable.getcached(name, mediatype)
+        assert self.__executable is not None
 
     def serverurl(self, path):
         """Given a path to a resource create a full URL to that resource.
 
-        Parameters
-        ----------
-        path
-            The relative path on the server to the resource.
+        :param path: The relative path on the server to the resource.
 
-        Return
-        ------
-        The URL that can be given to this server to find the given resource.
+        :return: The URL that can be given to this server to find the
+            given resource.
         """
         return "http://{0}:{1}/{2}".format(
             self.req.server.server_name, self.req.server.server_port, path
         )
 
     def rfile_safe(self):
-        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-        if sys.version_info >= (3, 2):
-            return self.req.rfile
-        else:
-            return HttpServerFP(self.req)
+        """Return a safe filepointer."""
+        return self.req.rfile
 
     def multipart(self):
-        ctype, pdict = cgi.parse_header(self.req.headers["Content-Type"])
+        """Return field storage from request."""
+        ctype, _ = cgi.parse_header(self.req.headers["Content-Type"])
         if ctype != "multipart/form-data":
             self.error(http.client.UNSUPPORTED_MEDIA_TYPE)
             return None
         fp = self.rfile_safe()
-        fs = cgi.FieldStorage(
+        ret = cgi.FieldStorage(
             fp=fp,
             headers=self.req.headers,
             environ={"REQUEST_METHOD": "POST"},
             strict_parsing=True,
         )
-        return fs
+        return ret
 
     def readline(self):
         """Read a single line from the input stream in decoded format."""
-        pass
 
     def writeline(self, line):
         """Write a single line of text to the output stream."""
@@ -225,8 +229,8 @@ class Handler:
 
     def writelines(self, lines):
         """Write a string one line at a time to the output stream."""
-        for l in lines.splitlines():
-            self.writeline(l)
+        for line in lines.splitlines():
+            self.writeline(line)
 
     def writefile(self, path):
         """Read and then write the file from the given path to the output
@@ -237,10 +241,7 @@ class Handler:
         This is meant for static files. Dynamic files should use writeline
         or writelines to operate.
 
-        Parameters
-        ----------
-        path
-            The normalized path to the file.
+        :param path: The normalized path to the file.
         """
         if os.path.isfile(path):
             mediatype, enc = mimetypes.guess_type(path)
@@ -253,27 +254,24 @@ class Handler:
         stream. If this is chunked then this will not return until the input
         file object is closed.
 
-        Parameters
-        ----------
-        fp
-            The file type object to read from.
-        chunked
-            If not ``None`` then the data should be sent in a chunked manner,
-            and the value should be a function that returns a boolean value
-            to indicate all data has been sent. The default is no chunked.
+        :param fp: The file type object to read from.
+        :param chunked: If not ``None`` then the data should be sent in
+            a chunked manner, and the value should be a function that
+            returns a boolean value to indicate all data has been sent.
+            The default is no chunked.
         """
         self.req.send_response(http.client.OK)
         self.req.send_header(
             "Cache-Control", "public max-age={0}".format(self.req.server.maxagestatic)
         )
         self.req.send_header("Last-Modified", self.req.date_time_string())
-        if mediatype == None:
+        if mediatype is None:
             self.req.send_header("Content-Type", "application/octet-stream")
         else:
             if mediatype in ["text/plain", "text/html"]:
                 mediatype = "{0};UTF-8".format(mediatype)
             self.req.send_header("Content-Type", mediatype)
-        if enc != None:
+        if enc is not None:
             self.req.send_header("Content-Encoding", enc)
 
         if chunked is not None:
@@ -317,6 +315,7 @@ class Handler:
             self.content = FLUSHED
 
     def error(self, code, message=None):
+        """Respond with HTTP status code for error."""
         self.req.send_error(code, message=message)
         self.content = FLUSHED
 
@@ -357,8 +356,8 @@ class Handler:
             pass
 
     def etag(self, data):
-        """Build an ETag representation for the data associated with the given
-        name."""
+        """Build an ETag representation for the data associated with
+        the given name."""
         self.__etag_init()
         self.__etag_feed(data)
         return self.__etag_value()
@@ -382,27 +381,3 @@ class Handler:
 
     def __setitem__(self, key, value):
         self.headers[key] = value
-
-
-class HttpServerFP:
-    """This will wrap the http.server request rfile so an EOF will be returned
-    when reading from the rfile. That way the Content-Length is always handled
-    correctly. This will also convert the binary stream into a character stream.
-    """
-
-    def __init__(self, req):
-        self.req = req
-        self.clen = int(self.req.headers["Content-Length"])
-        self.rfile = self.req.rfile
-
-    def read(self, size=-1):
-        if size < 0:
-            size = self.clen
-        if size > self.clen:
-            size = self.clen
-        ret = ""
-        if size > 0:
-            ret = self.rfile.read(size)
-            self.clen = self.clen - len(ret)
-            ret = str(ret, "UTF-8")
-        return ret
