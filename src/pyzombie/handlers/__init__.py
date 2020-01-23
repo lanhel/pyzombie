@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """Handlers."""
-__copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
+__copyright__ = """Copyright 2009 Flying Titans, Inc."""
 __license__ = """
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.

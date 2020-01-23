@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 """pyzombie is a RESTful server for execution of arbitrary code."""
-__copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
+__copyright__ = """Copyright 2009 Flying Titans, Inc."""
 __license__ = """
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -15,5 +15,12 @@ __license__ = """
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+
+import pkg_resources
+
+try:
+    __version__ = pkg_resources.get_distribution("pyzombie").version
+except pkg_resources.DistributionNotFound as err:
+    __version__ = "0.0.0"
 
 from .ZombieServer import *

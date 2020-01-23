@@ -3,7 +3,7 @@
 """Source to be uploaded to a server that will test arguments, envionment,
 stdin, stdout, and stderr for proper behavior."""
 __author__ = ("Lance Finn Helsten",)
-__copyright__ = """Copyright 2009 Lance Finn Helsten (helsten@acm.org)"""
+__copyright__ = """Copyright 2009 Flying Titans, Inc."""
 __license__ = """
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.

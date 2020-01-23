@@ -4,9 +4,9 @@
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
-#   
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-#   
+#
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,24 +42,18 @@ endif
 
 
 .PHONY: docs
-docs: uml apidoc
+docs: apidoc
 	@$(SPHINXBUILD) -M html $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
-	@$(SPHINXBUILD) -M singlehtml $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
-	@$(SPHINXBUILD) -M epub $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
-	@$(SPHINXBUILD) -M latex $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
-	@$(SPHINXBUILD) -M latexpdf $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
-	@$(SPHINXBUILD) -M doctest $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
+	#@$(SPHINXBUILD) -M singlehtml $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
+	#@$(SPHINXBUILD) -M epub $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
+	#@$(SPHINXBUILD) -M latex $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
+	#@$(SPHINXBUILD) -M latexpdf $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
+	#@$(SPHINXBUILD) -M doctest $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
 
 
 .PHONY: apidoc
 apidoc:
-	sphinx-apidoc -o $(SOURCEDIR)/ ../pyzombie
-
-
-.PHONY: uml
-uml:
-	@echo Update UML diagrams
-	@plantuml source/**/*.uml
+	sphinx-apidoc -o $(SOURCEDIR)/ ../src/pyzombie
 
 
 .PHONY: man
@@ -69,10 +63,6 @@ man:
 	@python -c 'import pyzombie; print(pyzombie.__doc__)' | \
 		sed '1,3d' | \
 		rst2man.py > source/man/man1/pyzombie.1
-
-
-.PHONY: clean
-clean:
 
 
 # Catch-all target: route all unknown targets to Sphinx using the new

@@ -1,0 +1,8 @@
+Glossary
+========
+
+.. toctree::
+   :hidden:
+
+.. glossary::
+

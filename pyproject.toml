@@ -1,5 +1,4 @@
 [build-system]
-
 	requires = [
 		"setuptools>=45.0.0",
 		"setuptools_scm",
@@ -20,10 +19,11 @@
 
 [tool.towncrier]
 	package = "pyzombie"
-	directory = "changelog"
+	directory = "docs/changelog"
 	filename = "CHANGELOG.rst"
 	title_format = "pyzombie {version} ({project_date})"
-	template = "changelog/_template.rst"
+	template = "docs/changelog/_template.rst"
+
 
 [tool.coverage]
 	[tool.coverage.run]

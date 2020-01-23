@@ -4,9 +4,9 @@
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
-#   
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-#   
+#
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,7 +57,6 @@ validate: lint test	## Validate project for CI, CD, and publish
 
 
 clean:				## Clean generated files
-	@$(MAKE) -C docs clean
 	@rm -rf build
 	@rm -rf dist
 	@rm -rf sdist
@@ -87,7 +86,7 @@ build:				## Build into ``./build`` directory
 
 
 .PHONY: test
-test:				## Run test suite
+test: build			## Run test suite
 	@echo Updating test tools
 	@${PIP} ${PIPFLAGS} install --upgrade pip
 	@${PIP} ${PIPFLAGS} install --upgrade -e ".[tests]"
